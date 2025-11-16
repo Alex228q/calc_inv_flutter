@@ -74,20 +74,19 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
     {'ticker': 'X5', 'name': 'X5', 'lotSize': '1'},
     {'ticker': 'LKOH', 'name': 'Лукойл', 'lotSize': '1'},
     {'ticker': 'MDMG', 'name': 'Мать и дитя', 'lotSize': '1'},
-    {'ticker': 'MOEX', 'name': 'Московская Биржа', 'lotSize': '10'},
     {'ticker': 'NVTK', 'name': 'НОВАТЭК', 'lotSize': '1'},
-    {'ticker': 'GMKN', 'name': 'Нор.Никель', 'lotSize': '10'},
+    {'ticker': 'GMKN', 'name': 'Норникель', 'lotSize': '10'},
+    {'ticker': 'OZON', 'name': 'OZON', 'lotSize': '1'},
     {'ticker': 'PLZL', 'name': 'Полюс', 'lotSize': '1'},
-    {'ticker': 'LSNGP', 'name': 'Ленэнерго', 'lotSize': '10'},
     {'ticker': 'SBERP', 'name': 'Сбербанк', 'lotSize': '1'},
     {'ticker': 'CHMF', 'name': 'Северсталь', 'lotSize': '1'},
-    {'ticker': 'TRNFP', 'name': 'Транснефть', 'lotSize': '1'},
     {'ticker': 'PHOR', 'name': 'ФосАгро', 'lotSize': '1'},
     {'ticker': 'YDEX', 'name': 'ЯНДЕКС', 'lotSize': '1'},
 
-
-    {'ticker': 'OZON', 'name': 'OZON', 'lotSize': '1'},
+    {'ticker': 'TRNFP', 'name': 'Транснефть', 'lotSize': '1'},
     {'ticker': 'OZPH', 'name': 'ОзонФарм', 'lotSize': '10'},
+    {'ticker': 'LSNGP', 'name': 'ЛенЭнерго', 'lotSize': '10'},
+    {'ticker': 'MOEX', 'name': 'Мосбиржа', 'lotSize': '10'},
   ];
 
   List<Stock> _stocks = [];

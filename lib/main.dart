@@ -329,6 +329,76 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
     return targetPercentages;
   }
 
+  // Новый метод для ребалансировки портфеля
+  void _rebalancePortfolio() {
+    if (_stocks.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Нет данных об акциях для ребалансировки'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Рассчитываем текущую стоимость портфеля
+    double currentPortfolioValue = 0;
+    final List<double> currentCosts = [];
+
+    for (int i = 0; i < _stocks.length; i++) {
+      final stock = _stocks[i];
+      final existingShares =
+          int.tryParse(_existingSharesControllers[i].text) ?? 0;
+      final double cost = existingShares * stock.lastPrice;
+      currentCosts.add(cost);
+      currentPortfolioValue += cost;
+    }
+
+    if (currentPortfolioValue <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Введите имеющиеся акции для ребалансировки'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Рассчитываем целевые доли
+    final List<double> targetPercentages = _calculateTargetPercentages();
+
+    // Рассчитываем целевые суммы для каждой акции
+    final List<double> targetAmounts = [];
+    for (int i = 0; i < _stocks.length; i++) {
+      final double targetAmount =
+          (targetPercentages[i] / 100) * currentPortfolioValue;
+      targetAmounts.add(targetAmount);
+    }
+
+    // Рассчитываем необходимое количество акций для каждой позиции
+    for (int i = 0; i < _stocks.length; i++) {
+      final stock = _stocks[i];
+      final double targetAmount = targetAmounts[i];
+      final int targetShares = (targetAmount / stock.lastPrice).round();
+
+      // Обновляем поле ввода
+      _existingSharesControllers[i].text = targetShares.toString();
+    }
+
+    setState(() {
+      _showAllocation = false;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Портфель ребалансирован! Общая стоимость: ${currentPortfolioValue.toStringAsFixed(2)} ₽',
+        ),
+        backgroundColor: Colors.green,
+      ),
+    );
+  }
+
   void _calculateAllocation() {
     final amount = double.tryParse(_amountController.text);
     if (amount == null || amount <= 0) {
@@ -762,9 +832,23 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Уже имеющиеся акции (в штуках):',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Уже имеющиеся акции (в штуках):',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                ElevatedButton.icon(
+                  onPressed: _rebalancePortfolio,
+                  icon: const Icon(Icons.autorenew, size: 20),
+                  label: const Text('Ребалансировка'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.purple,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ],
             ),
             if (currentPortfolioValue > 0) ...[
               const SizedBox(height: 8),
@@ -896,15 +980,16 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
       0.0,
       (sum, allocation) => sum + allocation.totalCost,
     );
-    final remaining = double.parse(_amountController.text) - totalCost;
+
+    // Исправление: безопасный парсинг суммы
+    final amountText = _amountController.text;
+    final amount = double.tryParse(amountText) ?? 0.0;
+    final remaining = amount - totalCost;
+
     final totalLotsToBuy = _allocations.fold(
       0,
       (sum, allocation) => sum + allocation.lots,
     );
-    // final totalExistingLots = _allocations.fold(
-    //   0,
-    //   (sum, allocation) => sum + allocation.existingLots,
-    // );
     final totalExistingCost = _allocations.fold(
       0.0,
       (sum, allocation) => sum + allocation.existingCost,
@@ -1024,7 +1109,7 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
                                         color: Colors.grey,
                                       ),
                                     ),
-                                    SizedBox(width: 50),
+                                    const SizedBox(width: 50),
                                     Text(
                                       'Станет: ${allocation.percentage.toStringAsFixed(1)}%',
                                       style: const TextStyle(

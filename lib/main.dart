@@ -1,26 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:intl/intl.dart';
 
 class Stock {
   final String secId;
   final double lastPrice;
   final String shortName;
-  final double? sma200;
   final int lotSize;
 
   Stock({
     required this.secId,
     required this.lastPrice,
     required this.shortName,
-    this.sma200,
     required this.lotSize,
   });
 
   @override
   String toString() {
-    return 'Stock{secId: $secId, lastPrice: $lastPrice, shortName: $shortName, sma200: $sma200, lotSize: $lotSize}';
+    return 'Stock{secId: $secId, lastPrice: $lastPrice, shortName: $shortName, lotSize: $lotSize}';
   }
 }
 
@@ -54,7 +51,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Цены акций со SMA200',
+      title: 'Цены акций',
       theme: ThemeData(primarySwatch: Colors.blue),
       home: const StockPriceScreen(),
     );
@@ -116,7 +113,7 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
         final ticker = stockInfo['ticker']!;
         final lotSize = int.parse(stockInfo['lotSize']!);
 
-        // Получаем текущую цену и SMA200
+        // Получаем текущую цену
         final stockData = await _fetchStockData(ticker);
 
         if (stockData['price'] != null) {
@@ -125,7 +122,6 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
               secId: ticker,
               shortName: stockInfo['name']!,
               lastPrice: stockData['price']!,
-              sma200: stockData['sma200'],
               lotSize: lotSize,
             ),
           );
@@ -182,152 +178,27 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
           }
         }
 
-        // Получаем SMA200
-        final sma200 = await _fetchSMA200(ticker);
-
-        return {'price': currentPrice ?? 0.0, 'sma200': sma200};
+        return {'price': currentPrice ?? 0.0};
       }
     } catch (e) {}
 
-    return {'price': null, 'sma200': null};
+    return {'price': null};
   }
 
-  Future<double?> _fetchSMA200(String ticker) async {
-    try {
-      // Рассчитываем дату начала (примерно 200 торговых дней назад)
-      final now = DateTime.now();
-      final startDate = DateTime(
-        now.year - 1,
-        now.month,
-        now.day,
-      ); // Берем данные за год
-
-      final formattedStartDate = DateFormat('yyyy-MM-dd').format(startDate);
-      final formattedEndDate = DateFormat('yyyy-MM-dd').format(now);
-
-      final requestUrl = Uri.parse(
-        'https://iss.moex.com/iss/engines/stock/markets/shares/boards/TQBR/securities/$ticker/candles.json?'
-        'iss.meta=off&'
-        'from=$formattedStartDate&'
-        'till=$formattedEndDate&'
-        'interval=24&' // Дневные данные
-        'candles.columns=close,volume',
-      );
-
-      final response = await http.get(requestUrl);
-
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> data = json.decode(response.body);
-        final candles = data['candles'];
-
-        if (candles != null && candles['data'] != null) {
-          final List<dynamic> candleData = candles['data'];
-
-          if (candleData.isNotEmpty) {
-            // Берем только свечи с объемом (исключаем не торговые дни)
-            final List<double> validCloses = [];
-
-            for (var candle in candleData) {
-              if (candle.length >= 2) {
-                final closePrice = candle[0]; // close price
-                final volume = candle[1]; // volume
-
-                // Проверяем что объем > 0 (торговый день)
-                if (volume != null && volume > 0) {
-                  final price = double.tryParse(closePrice.toString());
-                  if (price != null && price > 0) {
-                    validCloses.add(price);
-                  }
-                }
-              }
-            }
-
-            // Берем последние 200 торговых дней
-            final int count = validCloses.length > 200
-                ? 200
-                : validCloses.length;
-            if (count >= 50) {
-              // Минимум 50 дней для хоть какой-то статистики
-              double sum = 0;
-              final startIndex = validCloses.length - count;
-
-              for (int i = startIndex; i < validCloses.length; i++) {
-                sum += validCloses[i];
-              }
-
-              final sma200 = sum / count;
-
-              return sma200;
-            } else {}
-          }
-        }
-      } else {}
-    } catch (e) {}
-    return null;
-  }
-
-  // Новый метод для расчета целевых процентов с учетом SMA200
+  // Метод для расчета равных целевых процентов
   List<double> _calculateTargetPercentages() {
     final int stockCount = _stocks.length;
     final double basePercentage = 100.0 / stockCount;
-    final double maxDeviation = 2.0; // Максимальное отклонение ±2%
 
-    List<double> deviations = [];
     List<double> targetPercentages = [];
-
-    // Рассчитываем отклонения от SMA200 для каждой акции
-    for (final stock in _stocks) {
-      if (stock.sma200 != null && stock.sma200! > 0) {
-        final double deviationFromSMA =
-            ((stock.lastPrice - stock.sma200!) / stock.sma200!) * 100;
-        deviations.add(deviationFromSMA);
-      } else {
-        // Если SMA200 недоступна, используем нейтральное значение
-        deviations.add(0.0);
-      }
-    }
-
-    // Нормализуем отклонения в диапазоне [-maxDeviation, +maxDeviation]
-    if (deviations.isNotEmpty) {
-      double minDeviation = deviations.reduce((a, b) => a < b ? a : b);
-      double maxDeviationValue = deviations.reduce((a, b) => a > b ? a : b);
-      double range = maxDeviationValue - minDeviation;
-
-      if (range > 0) {
-        for (int i = 0; i < deviations.length; i++) {
-          // Нормализуем от -maxDeviation до +maxDeviation
-          double normalized =
-              ((deviations[i] - minDeviation) / range) * (2 * maxDeviation) -
-              maxDeviation;
-
-          // Инвертируем: чем ниже цена относительно SMA200, тем выше вес
-          double adjustedDeviation = -normalized;
-
-          targetPercentages.add(basePercentage + adjustedDeviation);
-        }
-      } else {
-        // Если все отклонения одинаковы, используем равные доли
-        for (int i = 0; i < deviations.length; i++) {
-          targetPercentages.add(basePercentage);
-        }
-      }
-
-      // Нормализуем проценты, чтобы сумма была 100%
-      double sum = targetPercentages.reduce((a, b) => a + b);
-      for (int i = 0; i < targetPercentages.length; i++) {
-        targetPercentages[i] = (targetPercentages[i] / sum) * 100;
-      }
-    } else {
-      // Резервный вариант: равные доли
-      for (int i = 0; i < stockCount; i++) {
-        targetPercentages.add(basePercentage);
-      }
+    for (int i = 0; i < stockCount; i++) {
+      targetPercentages.add(basePercentage);
     }
 
     return targetPercentages;
   }
 
-  // Новый метод для ребалансировки портфеля
+  // Метод для ребалансировки портфеля
   void _rebalancePortfolio() {
     if (_stocks.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -362,7 +233,7 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
       return;
     }
 
-    // Рассчитываем целевые доли
+    // Рассчитываем целевые доли (равные)
     final List<double> targetPercentages = _calculateTargetPercentages();
 
     // Рассчитываем целевые суммы для каждой акции
@@ -443,7 +314,7 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
 
     final double totalPortfolioValue = currentPortfolioValue + amount;
 
-    // Рассчитываем целевые доли с учетом SMA200
+    // Рассчитываем целевые доли (равные)
     final List<double> targetPercentages = _calculateTargetPercentages();
 
     // Рассчитываем целевые суммы для каждой акции
@@ -478,7 +349,7 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
 
     double remainingAmount = amount;
 
-    // ПРИОРИТЕТНОЕ РАСПРЕДЕЛЕНИЕ: покупаем самые недооцененные акции относительно целевых долей
+    // НОВЫЙ АЛГОРИТМ: Плавное распределение между всеми отстающими акциями
     bool changed = true;
     int iterations = 0;
     int maxIterations = 1000;
@@ -486,7 +357,7 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
     while (remainingAmount > 0 && changed && iterations < maxIterations) {
       changed = false;
 
-      // Находим акции, которые наиболее отстают от целевой доли
+      // Находим ВСЕ отстающие акции, которые можно докупить
       final List<Map<String, dynamic>> underweightStocks = [];
 
       for (int i = 0; i < allocations.length; i++) {
@@ -499,75 +370,80 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
         final double currentTotalAmount =
             allocation.existingCost + allocation.totalCost;
 
-        // Отклонение от целевой суммы (отрицательное = недобор)
+        // Отклонение от целевой суммы (положительное = недобор)
         final double deviationFromTarget = targetAmount - currentTotalAmount;
 
-        // Можем ли купить хотя бы 1 акцию?
-        if (deviationFromTarget > 0 && sharePrice <= remainingAmount) {
+        // Можем ли купить хотя бы 1 лот?
+        final double lotCost = sharePrice * stock.lotSize;
+        if (deviationFromTarget > 0 && lotCost <= remainingAmount) {
           underweightStocks.add({
             'index': i,
             'allocation': allocation,
             'sharePrice': sharePrice,
             'deviation': deviationFromTarget,
             'lotSize': stock.lotSize,
+            'lotCost': lotCost,
+            'currentPercentage':
+                (currentTotalAmount / totalPortfolioValue * 100),
+            'targetPercentage': targetPercentages[i],
           });
         }
       }
 
-      // Сортируем по величине недобора (самые недооцененные сначала)
-      underweightStocks.sort(
-        (a, b) => b['deviation'].compareTo(a['deviation']),
-      );
-
-      // Покупаем у самой недооцененной акции
+      // Если есть отстающие акции для покупки
       if (underweightStocks.isNotEmpty) {
-        final stockInfo = underweightStocks.first;
-        final int index = stockInfo['index'];
-        final allocation = stockInfo['allocation'];
-        final double sharePrice = stockInfo['sharePrice'];
-        final int lotSize = stockInfo['lotSize'];
+        // Сортируем по величине недобора (самые недооцененные сначала)
+        underweightStocks.sort(
+          (a, b) => b['deviation'].compareTo(a['deviation']),
+        );
 
-        // Рассчитываем, сколько акций нужно для приближения к целевой доле
-        final double neededAmount = stockInfo['deviation'];
-        int sharesToBuy = (neededAmount / sharePrice)
-            .ceil(); // Округляем вверх для быстрого достижения цели
+        // Ограничиваем количество рассматриваемых акций для более плавного распределения
+        final int maxStocksToConsider =
+            underweightStocks.length; // Рассматриваем все
 
-        // Ограничиваем количеством, которое можем купить на оставшиеся средства
-        final int maxAffordableShares = (remainingAmount / sharePrice).floor();
-        sharesToBuy = sharesToBuy > maxAffordableShares
-            ? maxAffordableShares
-            : sharesToBuy;
+        // Распределяем покупку лота между несколькими самыми отстающими акциями
+        int stocksBoughtInThisRound = 0;
 
-        // Покупаем целыми лотами
-        final int lotsToBuy = (sharesToBuy / lotSize).floor();
-        final int actualSharesToBuy = lotsToBuy * lotSize;
+        for (int i = 0; i < maxStocksToConsider; i++) {
+          if (i >= underweightStocks.length) break;
 
-        if (actualSharesToBuy > 0) {
-          final double cost = actualSharesToBuy * sharePrice;
-          final double newTotalCost = allocation.totalCost + cost;
-          final double newTotalAmount = allocation.existingCost + newTotalCost;
-          final double newPercentage =
-              newTotalAmount / totalPortfolioValue * 100;
+          final stockInfo = underweightStocks[i];
+          final int index = stockInfo['index'];
+          final allocation = stockInfo['allocation'];
+          final double lotCost = stockInfo['lotCost'];
 
-          allocations[index] = StockAllocation(
-            stock: allocation.stock,
-            lots: allocation.lots + lotsToBuy,
-            existingLots: allocation.existingLots,
-            totalCost: newTotalCost,
-            percentage: newPercentage,
-            existingCost: allocation.existingCost,
-            existingPercentage: allocation.existingPercentage,
-          );
+          // Проверяем, можем ли купить еще один лот
+          if (lotCost <= remainingAmount) {
+            // Покупаем 1 лот
+            allocations[index] = StockAllocation(
+              stock: allocation.stock,
+              lots: allocation.lots + 1,
+              existingLots: allocation.existingLots,
+              totalCost: allocation.totalCost + lotCost,
+              percentage:
+                  (allocation.existingCost + allocation.totalCost + lotCost) /
+                  totalPortfolioValue *
+                  100,
+              existingCost: allocation.existingCost,
+              existingPercentage: allocation.existingPercentage,
+            );
 
-          remainingAmount -= cost;
-          changed = true;
+            remainingAmount -= lotCost;
+            changed = true;
+            stocksBoughtInThisRound++;
+
+            // После покупки 1-3 лотов в этом раунде, прерываем для балансировки
+            if (stocksBoughtInThisRound >= 3) {
+              break;
+            }
+          }
         }
       }
 
       iterations++;
     }
 
-    // ЕСЛИ ВСЕ ЕЩЕ ОСТАЛИСЬ СРЕДСТВА - покупаем самые недооцененные по 1 лоту
+    // ЕСЛИ ВСЕ ЕЩЕ ОСТАЛИСЬ СРЕДСТВА - покупаем по одному лоту самых отстающих
     if (remainingAmount > 0) {
       changed = true;
       iterations = 0;
@@ -636,166 +512,30 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
     });
   }
 
-  Widget _buildTargetPercentages() {
-    if (_stocks.isEmpty) return const SizedBox();
-
-    final targetPercentages = _calculateTargetPercentages();
-
-    return Card(
-      margin: const EdgeInsets.all(8.0),
-      child: ExpansionTile(
-        title: const Text(
-          'Целевые доли с учетом SMA200:',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-        ),
-        initiallyExpanded: true,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              children: [
-                ..._stocks.asMap().entries.map((entry) {
-                  final index = entry.key;
-                  final stock = entry.value;
-                  final targetPercentage = targetPercentages[index];
-                  final basePercentage = 100.0 / _stocks.length;
-                  final difference = targetPercentage - basePercentage;
-
-                  Color getColor(double value) {
-                    if (value > 0) return Colors.green;
-                    if (value < 0) return Colors.red;
-                    return Colors.grey;
-                  }
-
-                  return Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(4.0),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              flex: 2,
-                              child: Text(
-                                stock.shortName,
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              flex: 3,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        '${targetPercentage.toStringAsFixed(1)}%',
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                      Text(
-                                        '${difference >= 0 ? '+' : ''}${difference.toStringAsFixed(1)}%',
-                                        style: TextStyle(
-                                          color: getColor(difference),
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      // Подчеркивание после каждой строки
-                      Divider(color: Colors.grey[300], height: 1, thickness: 1),
-                    ],
-                  );
-                }),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCompactPriceComparison(double currentPrice, double? sma200) {
-    if (sma200 == null) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '${currentPrice.toStringAsFixed(2)} ₽',
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Colors.green,
-            ),
-          ),
-          const Text(
-            'SMA200: расчёт...',
-            style: TextStyle(fontSize: 11, color: Colors.grey),
-          ),
-        ],
-      );
-    }
-
-    final difference = currentPrice - sma200;
-    final percent = (difference / sma200 * 100);
-    final color = difference >= 0 ? Colors.green : Colors.red;
-    final icon = difference >= 0 ? Icons.arrow_upward : Icons.arrow_downward;
-    final iconSize = 14.0;
-
+  Widget _buildCompactPriceInfo(double currentPrice) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Текущая цена
-        Row(
-          children: [
-            Icon(icon, size: iconSize, color: color),
-            const SizedBox(width: 4),
-            Text(
-              '${currentPrice.toStringAsFixed(2)} ₽',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
-            ),
-          ],
-        ),
-
-        const SizedBox(height: 4),
-
-        // SMA200
         Text(
-          'SMA200: ${sma200.toStringAsFixed(2)} ₽',
-          style: const TextStyle(fontSize: 11, color: Colors.grey),
+          '${currentPrice.toStringAsFixed(2)} ₽',
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.green,
+          ),
         ),
-
-        const SizedBox(height: 4),
-
-        // Процентное изменение
+        const SizedBox(height: 8),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
           decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
+            color: Colors.green.withOpacity(0.1),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Text(
-            '${difference >= 0 ? '+' : ''}${percent.toStringAsFixed(2)}%',
+          child: const Text(
+            'Равная доля',
             style: TextStyle(
               fontSize: 12,
-              color: color,
+              color: Colors.green,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -887,7 +627,6 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
                           labelText: stock.shortName,
-
                           border: const OutlineInputBorder(),
                           contentPadding: const EdgeInsets.symmetric(
                             horizontal: 12,
@@ -1301,11 +1040,8 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
 
                       const SizedBox(height: 12),
 
-                      // Цена и SMA200
-                      _buildCompactPriceComparison(
-                        stock.lastPrice,
-                        stock.sma200,
-                      ),
+                      // Цена
+                      _buildCompactPriceInfo(stock.lastPrice),
                     ],
                   ),
                 ),
@@ -1321,7 +1057,7 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Акции'),
+        title: const Text('Калькулятор покупок акций'),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -1405,9 +1141,6 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
                       ),
                     ),
                   ),
-
-                  // Целевые доли (новый виджет)
-                  _buildTargetPercentages(),
 
                   // Поля для ввода имеющихся акций (штук)
                   _buildExistingSharesInputs(),

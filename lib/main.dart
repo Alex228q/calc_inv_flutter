@@ -80,6 +80,7 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
     {'ticker': 'PHOR', 'name': 'ФосАгро', 'lotSize': '1'},
     {'ticker': 'YDEX', 'name': 'ЯНДЕКС', 'lotSize': '1'},
     {'ticker': 'OZON', 'name': 'OZON', 'lotSize': '1'},
+    {'ticker': 'GMKN', 'name': 'НорНикель', 'lotSize': '10'},
   ];
 
   List<Stock> _stocks = [];
@@ -323,6 +324,79 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
     }
 
     return targetPercentages;
+  }
+
+  // НОВЫЙ МЕТОД: Ребалансировка портфеля
+  void _rebalancePortfolio() {
+    if (_stocks.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Нет данных об акциях для ребалансировки'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Рассчитываем текущую стоимость портфеля
+    double currentPortfolioValue = 0;
+    final List<double> currentValues = [];
+
+    for (int i = 0; i < _stocks.length; i++) {
+      final stock = _stocks[i];
+      final existingShares =
+          int.tryParse(_existingSharesControllers[i].text) ?? 0;
+      final double value = existingShares * stock.lastPrice;
+      currentValues.add(value);
+      currentPortfolioValue += value;
+    }
+
+    if (currentPortfolioValue <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Введите имеющиеся акции для ребалансировки'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Рассчитываем целевые доли
+    final List<double> targetPercentages = _calculateTargetPercentages();
+
+    // Рассчитываем целевые стоимости для каждой акции
+    final List<double> targetValues = [];
+    for (int i = 0; i < _stocks.length; i++) {
+      final double targetValue =
+          (targetPercentages[i] / 100) * currentPortfolioValue;
+      targetValues.add(targetValue);
+    }
+
+    // Рассчитываем целевое количество акций для каждой позиции
+    for (int i = 0; i < _stocks.length; i++) {
+      final stock = _stocks[i];
+      final double targetValue = targetValues[i];
+
+      // Рассчитываем целевое количество акций
+      int targetShares = (targetValue / stock.lastPrice).round();
+
+      // Округляем до целого количества акций
+      targetShares = targetShares < 0 ? 0 : targetShares;
+
+      // Обновляем поле ввода
+      _existingSharesControllers[i].text = targetShares.toString();
+    }
+
+    setState(() {
+      _showAllocation = false;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Портфель ребалансирован согласно целевым долям'),
+        backgroundColor: Colors.green,
+      ),
+    );
   }
 
   void _calculateAllocation() {
@@ -758,9 +832,23 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Уже имеющиеся акции (в штуках):',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Уже имеющиеся акции (в штуках):',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                ElevatedButton.icon(
+                  onPressed: _rebalancePortfolio,
+                  icon: const Icon(Icons.autorenew, size: 20),
+                  label: const Text('Ребалансировка'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.purple,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ],
             ),
             if (currentPortfolioValue > 0) ...[
               const SizedBox(height: 8),
@@ -801,7 +889,6 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
                           labelText: stock.shortName,
-
                           border: const OutlineInputBorder(),
                           contentPadding: const EdgeInsets.symmetric(
                             horizontal: 12,
@@ -892,7 +979,8 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
       0.0,
       (sum, allocation) => sum + allocation.totalCost,
     );
-    final remaining = double.parse(_amountController.text) - totalCost;
+    final amount = double.tryParse(_amountController.text) ?? 0.0;
+    final remaining = amount - totalCost;
     final totalLotsToBuy = _allocations.fold(
       0,
       (sum, allocation) => sum + allocation.lots,

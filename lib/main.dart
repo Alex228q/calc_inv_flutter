@@ -80,7 +80,6 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
     {'ticker': 'PHOR', 'name': 'ФосАгро', 'lotSize': '1'},
     {'ticker': 'YDEX', 'name': 'ЯНДЕКС', 'lotSize': '1'},
     {'ticker': 'OZON', 'name': 'OZON', 'lotSize': '1'},
-    {'ticker': 'GMKN', 'name': 'НорНикель', 'lotSize': '10'},
   ];
 
   List<Stock> _stocks = [];

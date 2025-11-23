@@ -71,15 +71,13 @@ class StockPriceScreen extends StatefulWidget {
 class _StockPriceScreenState extends State<StockPriceScreen> {
   final List<Map<String, String>> _stocksInfo = [
     {'ticker': 'X5', 'name': 'X5', 'lotSize': '1'},
+    {'ticker': 'MDMG', 'name': 'Мать и дитя', 'lotSize': '1'},
     {'ticker': 'NVTK', 'name': 'НОВАТЭК', 'lotSize': '1'},
-    {'ticker': 'GMKN', 'name': 'Норникель', 'lotSize': '10'},
-    {'ticker': 'OZON', 'name': 'OZON', 'lotSize': '1'},
     {'ticker': 'PLZL', 'name': 'Полюс', 'lotSize': '1'},
     {'ticker': 'SBERP', 'name': 'Сбербанк', 'lotSize': '1'},
     {'ticker': 'CHMF', 'name': 'Северсталь', 'lotSize': '1'},
     {'ticker': 'TATNP', 'name': 'Татнефть', 'lotSize': '1'},
     {'ticker': 'PHOR', 'name': 'ФосАгро', 'lotSize': '1'},
-    {'ticker': 'YDEX', 'name': 'ЯНДЕКС', 'lotSize': '1'},
   ];
 
   List<Stock> _stocks = [];
@@ -829,26 +827,60 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Уже имеющиеся акции (в штуках):',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-                ElevatedButton.icon(
-                  onPressed: _rebalancePortfolio,
-                  icon: const Icon(Icons.autorenew, size: 20),
-                  label: const Text('Ребалансировка'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.purple,
-                    foregroundColor: Colors.white,
-                  ),
-                ),
-              ],
+            LayoutBuilder(
+              builder: (context, constraints) {
+                if (constraints.maxWidth < 450) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const Text(
+                        'Уже имеющиеся акции (в штуках):',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 10,
+                      ), // Добавляем небольшое расстояние между элементами в Column
+                      ElevatedButton.icon(
+                        onPressed: _rebalancePortfolio,
+                        icon: const Icon(Icons.autorenew, size: 20),
+                        label: const Text('Ребалансировка'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.purple,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                    ],
+                  );
+                } else {
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Уже имеющиеся акции (в штуках):',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      ElevatedButton.icon(
+                        onPressed: _rebalancePortfolio,
+                        icon: const Icon(Icons.autorenew, size: 20),
+                        label: const Text('Ребалансировка'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.purple,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                    ],
+                  );
+                }
+              },
             ),
+
             if (currentPortfolioValue > 0) ...[
               const SizedBox(height: 8),
               Text(
@@ -878,88 +910,99 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
                     ? (cost / currentPortfolioValue * 100)
                     : 0;
 
-                return SizedBox(
-                  width: 250, // фиксированная ширина 250 пикселей
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      TextField(
-                        controller: _existingSharesControllers[index],
-                        keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
-                          labelText: stock.shortName,
-                          border: const OutlineInputBorder(),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 16,
-                          ),
-                        ),
-                        onChanged: (value) {
-                          setState(() {});
-                        },
-                      ),
+                return LayoutBuilder(
+                  builder: (context, constraints) {
+                    // Определяем ширину в зависимости от доступного пространства
+                    double containerWidth = (constraints.maxWidth < 450)
+                        ? 130
+                        : 250;
 
-                      // Отображение стоимости и процента (если есть акции)
-                      if (existingShares > 0) ...[
-                        const SizedBox(height: 8),
-                        Container(
-                          padding: const EdgeInsets.all(12.0),
-                          decoration: BoxDecoration(
-                            color: Colors.grey[50],
-                            borderRadius: BorderRadius.circular(8.0),
-                            border: Border.all(color: Colors.grey[300]!),
+                    return SizedBox(
+                      width: containerWidth, // Используем вычисленную ширину
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          TextField(
+                            controller: _existingSharesControllers[index],
+                            keyboardType: TextInputType.number,
+                            decoration: InputDecoration(
+                              labelText: stock.shortName,
+                              border: const OutlineInputBorder(),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 16,
+                              ),
+                            ),
+                            onChanged: (value) {
+                              setState(() {});
+                            },
                           ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      '${cost.toStringAsFixed(2)} ₽',
+
+                          // Отображение стоимости и процента (если есть акции)
+                          if (existingShares > 0) ...[
+                            const SizedBox(height: 8),
+                            Container(
+                              padding: const EdgeInsets.all(12.0),
+                              decoration: BoxDecoration(
+                                color: Colors.grey[50],
+                                borderRadius: BorderRadius.circular(8.0),
+                                border: Border.all(color: Colors.grey[300]!),
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          '${cost.toStringAsFixed(2)} ₽',
+                                          style: const TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.green,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                        Text(
+                                          '$lots лотов',
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12.0,
+                                      vertical: 6.0,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: _getExistingPercentageColor(
+                                        percentage,
+                                      ),
+                                      borderRadius: BorderRadius.circular(16.0),
+                                    ),
+                                    child: Text(
+                                      '${percentage.toStringAsFixed(1)}%',
                                       style: const TextStyle(
                                         fontSize: 14,
-                                        color: Colors.green,
-                                        fontWeight: FontWeight.w500,
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                    Text(
-                                      '$lots лотов',
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12.0,
-                                  vertical: 6.0,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: _getExistingPercentageColor(
-                                    percentage,
                                   ),
-                                  borderRadius: BorderRadius.circular(16.0),
-                                ),
-                                child: Text(
-                                  '${percentage.toStringAsFixed(1)}%',
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
+                                ],
                               ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    );
+                  },
                 );
               }),
             ),
@@ -1045,81 +1088,184 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
                   child: Column(
                     children: [
                       // Показываем только информацию о покупке
-                      Row(
-                        children: [
-                          Expanded(
-                            flex: 1,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  allocation.stock.shortName,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w500,
-                                    fontSize: 18,
-                                  ),
-                                ),
-                                if (allocation.existingLots > 0)
-                                  Text(
-                                    'Имеется: ${allocation.existingLots} лотов',
-                                    style: const TextStyle(
-                                      fontSize: 11,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
-                          Expanded(
-                            flex: 1,
-                            child: Text(
-                              'Купить: ${allocation.lots} лотов',
-                              style: const TextStyle(
-                                fontSize: 18,
-                                color: Colors.green,
-                                fontWeight: FontWeight.w500,
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          if (constraints.maxWidth < 800) {
+                            // Версия для мобильных устройств (Column layout)
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 10.0,
+                                horizontal: 8.0,
                               ),
-                            ),
-                          ),
-                          Expanded(
-                            flex: 1,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Первая строка: Название и количество лотов к покупке
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            allocation.stock.shortName,
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight
+                                                  .w600, // Сделаем название чуть жирнее
+                                              fontSize: 18,
+                                            ),
+                                          ),
+                                          if (allocation.existingLots > 0)
+                                            Text(
+                                              'Имеется: ${allocation.existingLots} лотов',
+                                              style: const TextStyle(
+                                                fontSize: 11,
+                                                color: Colors.grey,
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                      Text(
+                                        'Купить: ${allocation.lots} лотов',
+                                        style: const TextStyle(
+                                          fontSize:
+                                              16, // Уменьшим немного размер шрифта
+                                          color: Colors.green,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+
+                                  const Divider(
+                                    height: 20,
+                                  ), // Разделитель для визуального отделения
+                                  // Вторая строка: Стоимость и проценты
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Стоимость: ${allocation.totalCost.toStringAsFixed(2)} ₽',
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          color: Colors.blue,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      // Используем Row для процентов, но без фиксированного SizedBox
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment
+                                            .spaceBetween, // Растягиваем по краям
+                                        children: [
+                                          Text(
+                                            'Было: ${allocation.existingPercentage.toStringAsFixed(1)}%',
+                                            style: const TextStyle(
+                                              fontSize: 14,
+                                              color: Colors.grey,
+                                            ),
+                                          ),
+                                          Text(
+                                            'Станет: ${allocation.percentage.toStringAsFixed(1)}%',
+                                            style: const TextStyle(
+                                              fontSize: 14,
+                                              color: Colors.purple,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            );
+                          } else {
+                            // Исходная версия для широких экранов (Row layout)
+                            return Row(
                               children: [
-                                Text(
-                                  'Стоимость: ${allocation.totalCost.toStringAsFixed(2)} ₽',
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    color: Colors.blue,
-                                    fontWeight: FontWeight.w500,
+                                Expanded(
+                                  flex: 1,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        allocation.stock.shortName,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w500,
+                                          fontSize: 18,
+                                        ),
+                                      ),
+                                      if (allocation.existingLots > 0)
+                                        Text(
+                                          'Имеется: ${allocation.existingLots} лотов',
+                                          style: const TextStyle(
+                                            fontSize: 11,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                    ],
                                   ),
                                 ),
-                                // ИЗМЕНЕНИЕ ЗДЕСЬ: показываем старые и новые проценты
-                                Row(
-                                  children: [
-                                    Text(
-                                      'Было: ${allocation.existingPercentage.toStringAsFixed(1)}%',
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.grey,
-                                      ),
+                                Expanded(
+                                  flex: 1,
+                                  child: Text(
+                                    'Купить: ${allocation.lots} лотов',
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      color: Colors.green,
+                                      fontWeight: FontWeight.w500,
                                     ),
-                                    SizedBox(width: 50),
-                                    Text(
-                                      'Станет: ${allocation.percentage.toStringAsFixed(1)}%',
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.purple,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ],
+                                  ),
                                 ),
-                                const SizedBox(height: 4),
+                                Expanded(
+                                  flex: 1,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Стоимость: ${allocation.totalCost.toStringAsFixed(2)} ₽',
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          color: Colors.blue,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                      Row(
+                                        children: [
+                                          Text(
+                                            'Было: ${allocation.existingPercentage.toStringAsFixed(1)}%',
+                                            style: const TextStyle(
+                                              fontSize: 14,
+                                              color: Colors.grey,
+                                            ),
+                                          ),
+                                          const SizedBox(
+                                            width: 50,
+                                          ), // Фиксированный отступ для широких экранов
+                                          Text(
+                                            'Станет: ${allocation.percentage.toStringAsFixed(1)}%',
+                                            style: const TextStyle(
+                                              fontSize: 14,
+                                              color: Colors.purple,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 4),
+                                    ],
+                                  ),
+                                ),
                               ],
-                            ),
-                          ),
-                        ],
+                            );
+                          }
+                        },
                       ),
                     ],
                   ),
@@ -1226,87 +1372,92 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
           children: List.generate(_stocks.length, (index) {
             final stock = _stocks[index];
 
-            return SizedBox(
-              width: 250, // фиксированная ширина 250 пикселей
-              child: Card(
-                margin: const EdgeInsets.all(0),
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Заголовок с тикером и названием
-                      Row(
+            return LayoutBuilder(
+              builder: (context, constraints) {
+                double sizedBoxWidth = constraints.maxWidth < 450 ? 140 : 250;
+                return SizedBox(
+                  width: sizedBoxWidth,
+                  child: Card(
+                    margin: const EdgeInsets.all(0),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          CircleAvatar(
-                            backgroundColor: Colors.blue[50],
-                            radius: 16,
+                          // Заголовок с тикером и названием
+                          Row(
+                            children: [
+                              CircleAvatar(
+                                backgroundColor: Colors.blue[50],
+                                radius: 16,
+                                child: Text(
+                                  stock.secId.substring(0, 1),
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      stock.shortName,
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    Text(
+                                      stock.secId,
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 12),
+
+                          // Информация о лоте
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[100],
+                              borderRadius: BorderRadius.circular(4),
+                            ),
                             child: Text(
-                              stock.secId.substring(0, 1),
+                              'Лот: ${stock.lotSize} шт',
                               style: const TextStyle(
                                 fontSize: 12,
-                                fontWeight: FontWeight.bold,
+                                color: Colors.grey,
                               ),
                             ),
                           ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  stock.shortName,
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                Text(
-                                  stock.secId,
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                              ],
-                            ),
+
+                          const SizedBox(height: 12),
+
+                          // Цена и SMA200
+                          _buildCompactPriceComparison(
+                            stock.lastPrice,
+                            stock.sma200,
                           ),
                         ],
                       ),
-
-                      const SizedBox(height: 12),
-
-                      // Информация о лоте
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.grey[100],
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          'Лот: ${stock.lotSize} шт',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey,
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 12),
-
-                      // Цена и SMA200
-                      _buildCompactPriceComparison(
-                        stock.lastPrice,
-                        stock.sma200,
-                      ),
-                    ],
+                    ),
                   ),
-                ),
-              ),
+                );
+              },
             );
           }),
         ),

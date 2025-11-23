@@ -1,4 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Optional: Check network status (also a normal permission) -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />     
+
     <application
         android:label="calc_inv"
         android:name="${applicationName}"

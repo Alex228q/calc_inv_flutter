@@ -914,7 +914,7 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
                   builder: (context, constraints) {
                     // Определяем ширину в зависимости от доступного пространства
                     double containerWidth = (constraints.maxWidth < 450)
-                        ? 130
+                        ? 164
                         : 250;
 
                     return SizedBox(
@@ -942,7 +942,7 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
                           if (existingShares > 0) ...[
                             const SizedBox(height: 8),
                             Container(
-                              padding: const EdgeInsets.all(12.0),
+                              padding: const EdgeInsets.all(8.0),
                               decoration: BoxDecoration(
                                 color: Colors.grey[50],
                                 borderRadius: BorderRadius.circular(8.0),
@@ -965,19 +965,12 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
                                             fontWeight: FontWeight.w500,
                                           ),
                                         ),
-                                        Text(
-                                          '$lots лотов',
-                                          style: const TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.grey,
-                                          ),
-                                        ),
                                       ],
                                     ),
                                   ),
                                   Container(
                                     padding: const EdgeInsets.symmetric(
-                                      horizontal: 12.0,
+                                      horizontal: 6.0,
                                       vertical: 6.0,
                                     ),
                                     decoration: BoxDecoration(
@@ -989,7 +982,7 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
                                     child: Text(
                                       '${percentage.toStringAsFixed(1)}%',
                                       style: const TextStyle(
-                                        fontSize: 14,
+                                        fontSize: 12,
                                         color: Colors.white,
                                         fontWeight: FontWeight.bold,
                                       ),
@@ -1374,7 +1367,7 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
 
             return LayoutBuilder(
               builder: (context, constraints) {
-                double sizedBoxWidth = constraints.maxWidth < 450 ? 140 : 250;
+                double sizedBoxWidth = constraints.maxWidth < 450 ? 170 : 250;
                 return SizedBox(
                   width: sizedBoxWidth,
                   child: Card(
@@ -1426,27 +1419,6 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
 
                           const SizedBox(height: 12),
 
-                          // Информация о лоте
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.grey[100],
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              'Лот: ${stock.lotSize} шт',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          ),
-
-                          const SizedBox(height: 12),
-
                           // Цена и SMA200
                           _buildCompactPriceComparison(
                             stock.lastPrice,
@@ -1478,96 +1450,99 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
           ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _stocks.isEmpty
-          ? const Center(
-              child: Text(
-                'Нет данных для отображения',
-                style: TextStyle(fontSize: 16),
-              ),
-            )
-          : SingleChildScrollView(
-              child: Column(
-                children: [
-                  if (_error.isNotEmpty)
-                    Container(
-                      padding: const EdgeInsets.all(8.0),
-                      color: Colors.orange[100],
-                      child: Row(
-                        children: [
-                          const Icon(Icons.error, color: Colors.red),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              _error,
-                              style: const TextStyle(color: Colors.red),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                  // Поле ввода суммы и кнопка расчета
-                  Card(
-                    margin: const EdgeInsets.all(8.0),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        children: [
-                          TextField(
-                            controller: _amountController,
-                            keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(
-                              labelText: 'Сумма для инвестирования (₽)',
-                              border: OutlineInputBorder(),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton(
-                              onPressed: _isLoading
-                                  ? null
-                                  : _calculateAllocation,
-                              style: ElevatedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 16,
-                                ),
+      body: SafeArea(
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _stocks.isEmpty
+            ? const Center(
+                child: Text(
+                  'Нет данных для отображения',
+                  style: TextStyle(fontSize: 16),
+                ),
+              )
+            : SingleChildScrollView(
+                padding: EdgeInsets.only(bottom: 18),
+                child: Column(
+                  children: [
+                    if (_error.isNotEmpty)
+                      Container(
+                        padding: const EdgeInsets.all(8.0),
+                        color: Colors.orange[100],
+                        child: Row(
+                          children: [
+                            const Icon(Icons.error, color: Colors.red),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                _error,
+                                style: const TextStyle(color: Colors.red),
                               ),
-                              child: _isLoading
-                                  ? const SizedBox(
-                                      height: 20,
-                                      width: 20,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                      ),
-                                    )
-                                  : const Text(
-                                      'Рассчитать распределение',
-                                      style: TextStyle(fontSize: 16),
-                                    ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
+                      ),
+
+                    // Поле ввода суммы и кнопка расчета
+                    Card(
+                      margin: const EdgeInsets.all(8.0),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          children: [
+                            TextField(
+                              controller: _amountController,
+                              keyboardType: TextInputType.number,
+                              decoration: const InputDecoration(
+                                labelText: 'Сумма для инвестирования (₽)',
+                                border: OutlineInputBorder(),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: _isLoading
+                                    ? null
+                                    : _calculateAllocation,
+                                style: ElevatedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 16,
+                                  ),
+                                ),
+                                child: _isLoading
+                                    ? const SizedBox(
+                                        height: 20,
+                                        width: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                    : const Text(
+                                        'Рассчитать распределение',
+                                        style: TextStyle(fontSize: 16),
+                                      ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
 
-                  // Целевые доли (новый виджет)
-                  _buildTargetPercentages(),
+                    // Целевые доли (новый виджет)
+                    _buildTargetPercentages(),
 
-                  // Поля для ввода имеющихся акций (штук)
-                  _buildExistingSharesInputs(),
+                    // Поля для ввода имеющихся акций (штук)
+                    _buildExistingSharesInputs(),
 
-                  // Результаты распределения
-                  _buildAllocationResults(),
+                    // Результаты распределения
+                    _buildAllocationResults(),
 
-                  // Список акций в сетке
-                  _buildStocksGrid(),
-                ],
+                    // Список акций в сетке
+                    _buildStocksGrid(),
+                  ],
+                ),
               ),
-            ),
+      ),
     );
   }
 

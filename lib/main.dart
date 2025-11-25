@@ -81,7 +81,7 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
     {'ticker': 'TATNP', 'name': 'Татнефть', 'lotSize': '1'},
     {'ticker': 'PHOR', 'name': 'ФосАгро', 'lotSize': '1'},
     {'ticker': 'YDEX', 'name': 'Yandex', 'lotSize': '1'},
-    {'ticker': 'T', 'name': 'Т-Технологии', 'lotSize': '1'},
+    {'ticker': 'MOEX', 'name': 'МосБиржа', 'lotSize': '10'},
   ];
 
   List<Stock> _stocks = [];

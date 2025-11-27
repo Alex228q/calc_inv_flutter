@@ -72,7 +72,9 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
   final List<Map<String, String>> _stocksInfo = [
     {'ticker': 'X5', 'name': 'X5', 'lotSize': '1'},
     {'ticker': 'MDMG', 'name': 'Мать и дитя', 'lotSize': '1'},
+    {'ticker': 'MOEX', 'name': 'Мосбиржа', 'lotSize': '10'},
     {'ticker': 'NVTK', 'name': 'НОВАТЭК', 'lotSize': '1'},
+    {'ticker': 'GMKN', 'name': 'Норникель', 'lotSize': '10'},
     {'ticker': 'OZON', 'name': 'OZON', 'lotSize': '1'},
     {'ticker': 'PLZL', 'name': 'Полюс', 'lotSize': '1'},
     {'ticker': 'SBERP', 'name': 'Сбербанк', 'lotSize': '1'},

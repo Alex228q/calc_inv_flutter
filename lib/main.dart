@@ -918,7 +918,7 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
                   builder: (context, constraints) {
                     // Определяем ширину в зависимости от доступного пространства
                     double containerWidth = (constraints.maxWidth < 450)
-                        ? 164
+                        ? 154
                         : 250;
 
                     return SizedBox(

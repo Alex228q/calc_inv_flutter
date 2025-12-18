@@ -16,6 +16,14 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  msix: ^3.16.12
 
 flutter:
   uses-material-design: true
+
+msix_config:
+  display_name: Calc App
+  publisher_display_name: Company Name
+  identity_name: company.suite.flutterapp
+  msix_version: 1.0.1.0
+  capabilities: internetClient

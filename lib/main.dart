@@ -1,26 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:intl/intl.dart';
 
 class Stock {
   final String secId;
   final double lastPrice;
   final String shortName;
-  final double? sma200;
   final int lotSize;
 
   Stock({
     required this.secId,
     required this.lastPrice,
     required this.shortName,
-    this.sma200,
     required this.lotSize,
   });
 
   @override
   String toString() {
-    return 'Stock{secId: $secId, lastPrice: $lastPrice, shortName: $shortName, sma200: $sma200, lotSize: $lotSize}';
+    return 'Stock{secId: $secId, lastPrice: $lastPrice, shortName: $shortName, lotSize: $lotSize}';
   }
 }
 
@@ -54,8 +51,8 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Цены акций со SMA200',
-      theme: ThemeData(primarySwatch: Colors.blue),
+      title: 'Равномерное распределение',
+      theme: ThemeData(primarySwatch: Colors.blue, useMaterial3: true),
       home: const StockPriceScreen(),
     );
   }
@@ -97,7 +94,7 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
     super.initState();
     // Инициализируем контроллеры для существующих акций (штук)
     for (int i = 0; i < _stocksInfo.length; i++) {
-      _existingSharesControllers.add(TextEditingController(text: ''));
+      _existingSharesControllers.add(TextEditingController(text: '0'));
     }
     _fetchStockPrices();
   }
@@ -116,16 +113,15 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
         final ticker = stockInfo['ticker']!;
         final lotSize = int.parse(stockInfo['lotSize']!);
 
-        // Получаем текущую цену и SMA200
-        final stockData = await _fetchStockData(ticker);
+        // Получаем текущую цену
+        final price = await _fetchStockPrice(ticker);
 
-        if (stockData['price'] != null) {
+        if (price != null) {
           loadedStocks.add(
             Stock(
               secId: ticker,
               shortName: stockInfo['name']!,
-              lastPrice: stockData['price']!,
-              sma200: stockData['sma200'],
+              lastPrice: price,
               lotSize: lotSize,
             ),
           );
@@ -144,9 +140,8 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
     }
   }
 
-  Future<Map<String, double?>> _fetchStockData(String ticker) async {
+  Future<double?> _fetchStockPrice(String ticker) async {
     try {
-      // Получаем текущую цену
       final priceUrl = Uri.parse(
         'https://iss.moex.com/iss/engines/stock/markets/shares/boards/TQBR/securities/$ticker.json?'
         'iss.meta=off&'
@@ -182,160 +177,26 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
           }
         }
 
-        // Получаем SMA200
-        final sma200 = await _fetchSMA200(ticker);
-
-        return {'price': currentPrice ?? 0.0, 'sma200': sma200};
+        return currentPrice ?? 0.0;
       }
-    } catch (e) {}
+    } catch (e) {
+      // В случае ошибки возвращаем null
+    }
 
-    return {'price': null, 'sma200': null};
-  }
-
-  Future<double?> _fetchSMA200(String ticker) async {
-    try {
-      // Рассчитываем дату начала (примерно 200 торговых дней назад)
-      final now = DateTime.now();
-      final startDate = DateTime(
-        now.year - 1,
-        now.month,
-        now.day,
-      ); // Берем данные за год
-
-      final formattedStartDate = DateFormat('yyyy-MM-dd').format(startDate);
-      final formattedEndDate = DateFormat('yyyy-MM-dd').format(now);
-
-      final requestUrl = Uri.parse(
-        'https://iss.moex.com/iss/engines/stock/markets/shares/boards/TQBR/securities/$ticker/candles.json?'
-        'iss.meta=off&'
-        'from=$formattedStartDate&'
-        'till=$formattedEndDate&'
-        'interval=24&' // Дневные данные
-        'candles.columns=close,volume',
-      );
-
-      final response = await http.get(requestUrl);
-
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> data = json.decode(response.body);
-        final candles = data['candles'];
-
-        if (candles != null && candles['data'] != null) {
-          final List<dynamic> candleData = candles['data'];
-
-          if (candleData.isNotEmpty) {
-            // Берем только свечи с объемом (исключаем не торговые дни)
-            final List<double> validCloses = [];
-
-            for (var candle in candleData) {
-              if (candle.length >= 2) {
-                final closePrice = candle[0]; // close price
-                final volume = candle[1]; // volume
-
-                // Проверяем что объем > 0 (торговый день)
-                if (volume != null && volume > 0) {
-                  final price = double.tryParse(closePrice.toString());
-                  if (price != null && price > 0) {
-                    validCloses.add(price);
-                  }
-                }
-              }
-            }
-
-            // Берем последние 200 торговых дней
-            final int count = validCloses.length > 200
-                ? 200
-                : validCloses.length;
-            if (count >= 50) {
-              // Минимум 50 дней для хоть какой-то статистики
-              double sum = 0;
-              final startIndex = validCloses.length - count;
-
-              for (int i = startIndex; i < validCloses.length; i++) {
-                sum += validCloses[i];
-              }
-
-              final sma200 = sum / count;
-
-              return sma200;
-            } else {}
-          }
-        }
-      } else {}
-    } catch (e) {}
     return null;
   }
 
-  // Новый метод для расчета целевых процентов с учетом SMA200
-  List<double> _calculateTargetPercentages() {
+  // Рассчитываем равные целевые доли
+  List<double> _calculateEqualPercentages() {
     final int stockCount = _stocks.length;
-    final double basePercentage = 100.0 / stockCount;
-    final double maxDeviation = 2.0; // Максимальное отклонение ±2%
-
-    List<double> deviations = [];
-    List<double> targetPercentages = [];
-
-    // Рассчитываем отклонения от SMA200 для каждой акции
-    for (final stock in _stocks) {
-      if (stock.sma200 != null && stock.sma200! > 0) {
-        final double deviationFromSMA =
-            ((stock.lastPrice - stock.sma200!) / stock.sma200!) * 100;
-        deviations.add(deviationFromSMA);
-      } else {
-        // Если SMA200 недоступна, используем нейтральное значение
-        deviations.add(0.0);
-      }
-    }
-
-    // Нормализуем отклонения в диапазоне [-maxDeviation, +maxDeviation]
-    if (deviations.isNotEmpty) {
-      double minDeviation = deviations.reduce((a, b) => a < b ? a : b);
-      double maxDeviationValue = deviations.reduce((a, b) => a > b ? a : b);
-      double range = maxDeviationValue - minDeviation;
-
-      if (range > 0) {
-        for (int i = 0; i < deviations.length; i++) {
-          // Нормализуем от -maxDeviation до +maxDeviation
-          double normalized =
-              ((deviations[i] - minDeviation) / range) * (2 * maxDeviation) -
-              maxDeviation;
-
-          // Инвертируем: чем ниже цена относительно SMA200, тем выше вес
-          double adjustedDeviation = -normalized;
-
-          targetPercentages.add(basePercentage + adjustedDeviation);
-        }
-      } else {
-        // Если все отклонения одинаковы, используем равные доли
-        for (int i = 0; i < deviations.length; i++) {
-          targetPercentages.add(basePercentage);
-        }
-      }
-
-      // Нормализуем проценты, чтобы сумма была 100%
-      double sum = targetPercentages.reduce((a, b) => a + b);
-      for (int i = 0; i < targetPercentages.length; i++) {
-        targetPercentages[i] = (targetPercentages[i] / sum) * 100;
-      }
-    } else {
-      // Резервный вариант: равные доли
-      for (int i = 0; i < stockCount; i++) {
-        targetPercentages.add(basePercentage);
-      }
-    }
-
-    return targetPercentages;
+    final double equalPercentage = 100.0 / stockCount;
+    return List.filled(stockCount, equalPercentage);
   }
 
-  // НОВЫЙ МЕТОД: Ребалансировка портфеля
+  // Ребалансировка портфеля
   void _rebalancePortfolio() {
     if (_stocks.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Нет данных об акциях для ребалансировки'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      _showSnackBar('Нет данных об акциях для ребалансировки', Colors.red);
       return;
     }
 
@@ -353,35 +214,21 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
     }
 
     if (currentPortfolioValue <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Введите имеющиеся акции для ребалансировки'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      _showSnackBar('Введите имеющиеся акции для ребалансировки', Colors.red);
       return;
     }
 
-    // Рассчитываем целевые доли
-    final List<double> targetPercentages = _calculateTargetPercentages();
+    // Рассчитываем целевые доли (равные)
+    final List<double> targetPercentages = _calculateEqualPercentages();
 
     // Рассчитываем целевые стоимости для каждой акции
-    final List<double> targetValues = [];
-    for (int i = 0; i < _stocks.length; i++) {
-      final double targetValue =
-          (targetPercentages[i] / 100) * currentPortfolioValue;
-      targetValues.add(targetValue);
-    }
-
-    // Рассчитываем целевое количество акций для каждой позиции
     for (int i = 0; i < _stocks.length; i++) {
       final stock = _stocks[i];
-      final double targetValue = targetValues[i];
+      final double targetValue =
+          (targetPercentages[i] / 100) * currentPortfolioValue;
 
       // Рассчитываем целевое количество акций
       int targetShares = (targetValue / stock.lastPrice).round();
-
-      // Округляем до целого количества акций
       targetShares = targetShares < 0 ? 0 : targetShares;
 
       // Обновляем поле ввода
@@ -392,33 +239,19 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
       _showAllocation = false;
     });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Портфель ребалансирован согласно целевым долям'),
-        backgroundColor: Colors.green,
-      ),
-    );
+    _showSnackBar('Портфель ребалансирован на равные доли', Colors.green);
   }
 
+  // Основной расчет распределения
   void _calculateAllocation() {
     final amount = double.tryParse(_amountController.text);
     if (amount == null || amount <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Введите корректную сумму для расчета'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      _showSnackBar('Введите корректную сумму для расчета', Colors.red);
       return;
     }
 
     if (_stocks.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Нет данных об акциях для расчета'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      _showSnackBar('Нет данных об акциях для расчета', Colors.red);
       return;
     }
 
@@ -446,8 +279,8 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
 
     final double totalPortfolioValue = currentPortfolioValue + amount;
 
-    // Рассчитываем целевые доли с учетом SMA200
-    final List<double> targetPercentages = _calculateTargetPercentages();
+    // Рассчитываем целевые доли (равные)
+    final List<double> targetPercentages = _calculateEqualPercentages();
 
     // Рассчитываем целевые суммы для каждой акции
     final List<double> targetAmounts = [];
@@ -458,7 +291,7 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
     }
 
     // Инициализация allocations
-    List<StockAllocation> allocations = [];
+    _allocations = [];
     for (int i = 0; i < _stocks.length; i++) {
       final stock = _stocks[i];
       final double existingCost = existingCosts[i];
@@ -466,7 +299,7 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
           ? (existingCost / currentPortfolioValue * 100)
           : 0;
 
-      allocations.add(
+      _allocations.add(
         StockAllocation(
           stock: stock,
           lots: 0,
@@ -481,10 +314,10 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
 
     double remainingAmount = amount;
 
-    // ПРИОРИТЕТНОЕ РАСПРЕДЕЛЕНИЕ: покупаем самые недооцененные акции относительно целевых долей
+    // Покупаем акции, наиболее отстающие от целевой доли
     bool changed = true;
     int iterations = 0;
-    int maxIterations = 1000;
+    const int maxIterations = 10000; // Увеличим лимит для большей точности
 
     while (remainingAmount > 0 && changed && iterations < maxIterations) {
       changed = false;
@@ -492,8 +325,8 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
       // Находим акции, которые наиболее отстают от целевой доли
       final List<Map<String, dynamic>> underweightStocks = [];
 
-      for (int i = 0; i < allocations.length; i++) {
-        final allocation = allocations[i];
+      for (int i = 0; i < _allocations.length; i++) {
+        final allocation = _allocations[i];
         final stock = _stocks[i];
         final double sharePrice = sharePrices[i];
         final double targetAmount = targetAmounts[i];
@@ -505,306 +338,60 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
         // Отклонение от целевой суммы (отрицательное = недобор)
         final double deviationFromTarget = targetAmount - currentTotalAmount;
 
-        // Можем ли купить хотя бы 1 акцию?
-        if (deviationFromTarget > 0 && sharePrice <= remainingAmount) {
+        // Можем ли купить хотя бы 1 лот?
+        final double lotCost = sharePrice * stock.lotSize;
+        if (deviationFromTarget > 0 && lotCost <= remainingAmount) {
           underweightStocks.add({
             'index': i,
             'allocation': allocation,
-            'sharePrice': sharePrice,
+            'lotCost': lotCost,
             'deviation': deviationFromTarget,
-            'lotSize': stock.lotSize,
           });
         }
       }
 
-      // Сортируем по величине недобора (самые недооцененные сначала)
+      // Сортируем по величине недобора (самые отстающие сначала)
       underweightStocks.sort(
         (a, b) => b['deviation'].compareTo(a['deviation']),
       );
 
-      // Покупаем у самой недооцененной акции
+      // Покупаем у самой отстающей акции
       if (underweightStocks.isNotEmpty) {
         final stockInfo = underweightStocks.first;
         final int index = stockInfo['index'];
         final allocation = stockInfo['allocation'];
-        final double sharePrice = stockInfo['sharePrice'];
-        final int lotSize = stockInfo['lotSize'];
+        final double lotCost = stockInfo['lotCost'];
 
-        // Рассчитываем, сколько акций нужно для приближения к целевой доле
-        final double neededAmount = stockInfo['deviation'];
-        int sharesToBuy = (neededAmount / sharePrice)
-            .ceil(); // Округляем вверх для быстрого достижения цели
+        // Покупаем 1 лот
+        _allocations[index] = StockAllocation(
+          stock: allocation.stock,
+          lots: allocation.lots + 1,
+          existingLots: allocation.existingLots,
+          totalCost: allocation.totalCost + lotCost,
+          percentage:
+              (allocation.existingCost + allocation.totalCost + lotCost) /
+              totalPortfolioValue *
+              100,
+          existingCost: allocation.existingCost,
+          existingPercentage: allocation.existingPercentage,
+        );
 
-        // Ограничиваем количеством, которое можем купить на оставшиеся средства
-        final int maxAffordableShares = (remainingAmount / sharePrice).floor();
-        sharesToBuy = sharesToBuy > maxAffordableShares
-            ? maxAffordableShares
-            : sharesToBuy;
-
-        // Покупаем целыми лотами
-        final int lotsToBuy = (sharesToBuy / lotSize).floor();
-        final int actualSharesToBuy = lotsToBuy * lotSize;
-
-        if (actualSharesToBuy > 0) {
-          final double cost = actualSharesToBuy * sharePrice;
-          final double newTotalCost = allocation.totalCost + cost;
-          final double newTotalAmount = allocation.existingCost + newTotalCost;
-          final double newPercentage =
-              newTotalAmount / totalPortfolioValue * 100;
-
-          allocations[index] = StockAllocation(
-            stock: allocation.stock,
-            lots: allocation.lots + lotsToBuy,
-            existingLots: allocation.existingLots,
-            totalCost: newTotalCost,
-            percentage: newPercentage,
-            existingCost: allocation.existingCost,
-            existingPercentage: allocation.existingPercentage,
-          );
-
-          remainingAmount -= cost;
-          changed = true;
-        }
+        remainingAmount -= lotCost;
+        changed = true;
       }
 
       iterations++;
     }
 
-    // ЕСЛИ ВСЕ ЕЩЕ ОСТАЛИСЬ СРЕДСТВА - покупаем самые недооцененные по 1 лоту
-    if (remainingAmount > 0) {
-      changed = true;
-      iterations = 0;
-
-      while (remainingAmount > 0 && changed && iterations < maxIterations) {
-        changed = false;
-
-        final List<Map<String, dynamic>> affordableStocks = [];
-
-        for (int i = 0; i < allocations.length; i++) {
-          final allocation = allocations[i];
-          final stock = _stocks[i];
-          final double sharePrice = sharePrices[i];
-          final double lotCost = sharePrice * stock.lotSize;
-          final double targetAmount = targetAmounts[i];
-          final double currentTotalAmount =
-              allocation.existingCost + allocation.totalCost;
-          final double deviationFromTarget = targetAmount - currentTotalAmount;
-
-          // Покупаем если есть недобор и можем купить лот
-          if (deviationFromTarget > 0 && lotCost <= remainingAmount) {
-            affordableStocks.add({
-              'index': i,
-              'allocation': allocation,
-              'lotCost': lotCost,
-              'deviation': deviationFromTarget,
-            });
-          }
-        }
-
-        // Сортируем по недобору (самые недооцененные сначала)
-        affordableStocks.sort(
-          (a, b) => b['deviation'].compareTo(a['deviation']),
-        );
-
-        if (affordableStocks.isNotEmpty) {
-          final stockInfo = affordableStocks.first;
-          final int index = stockInfo['index'];
-          final allocation = stockInfo['allocation'];
-          final double lotCost = stockInfo['lotCost'];
-
-          allocations[index] = StockAllocation(
-            stock: allocation.stock,
-            lots: allocation.lots + 1,
-            existingLots: allocation.existingLots,
-            totalCost: allocation.totalCost + lotCost,
-            percentage:
-                (allocation.existingCost + allocation.totalCost + lotCost) /
-                totalPortfolioValue *
-                100,
-            existingCost: allocation.existingCost,
-            existingPercentage: allocation.existingPercentage,
-          );
-
-          remainingAmount -= lotCost;
-          changed = true;
-        }
-
-        iterations++;
-      }
-    }
-
     setState(() {
-      _allocations = allocations;
       _showAllocation = true;
     });
   }
 
-  Widget _buildTargetPercentages() {
-    if (_stocks.isEmpty) return const SizedBox();
-
-    final targetPercentages = _calculateTargetPercentages();
-
-    return Card(
-      margin: const EdgeInsets.all(8.0),
-      child: ExpansionTile(
-        title: const Text(
-          'Целевые доли с учетом SMA200:',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-        ),
-        initiallyExpanded: true,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              children: [
-                ..._stocks.asMap().entries.map((entry) {
-                  final index = entry.key;
-                  final stock = entry.value;
-                  final targetPercentage = targetPercentages[index];
-                  final basePercentage = 100.0 / _stocks.length;
-                  final difference = targetPercentage - basePercentage;
-
-                  Color getColor(double value) {
-                    if (value > 0) return Colors.green;
-                    if (value < 0) return Colors.red;
-                    return Colors.grey;
-                  }
-
-                  return Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(4.0),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              flex: 2,
-                              child: Text(
-                                stock.shortName,
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              flex: 3,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        '${targetPercentage.toStringAsFixed(1)}%',
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                      Text(
-                                        '${difference >= 0 ? '+' : ''}${difference.toStringAsFixed(1)}%',
-                                        style: TextStyle(
-                                          color: getColor(difference),
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      // Подчеркивание после каждой строки
-                      Divider(color: Colors.grey[300], height: 1, thickness: 1),
-                    ],
-                  );
-                }),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCompactPriceComparison(double currentPrice, double? sma200) {
-    if (sma200 == null) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '${currentPrice.toStringAsFixed(2)} ₽',
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Colors.green,
-            ),
-          ),
-          const Text(
-            'SMA200: расчёт...',
-            style: TextStyle(fontSize: 11, color: Colors.grey),
-          ),
-        ],
-      );
-    }
-
-    final difference = currentPrice - sma200;
-    final percent = (difference / sma200 * 100);
-    final color = difference >= 0 ? Colors.green : Colors.red;
-    final icon = difference >= 0 ? Icons.arrow_upward : Icons.arrow_downward;
-    final iconSize = 14.0;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Текущая цена
-        Row(
-          children: [
-            Icon(icon, size: iconSize, color: color),
-            const SizedBox(width: 4),
-            Text(
-              '${currentPrice.toStringAsFixed(2)} ₽',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
-            ),
-          ],
-        ),
-
-        const SizedBox(height: 4),
-
-        // SMA200
-        Text(
-          'SMA200: ${sma200.toStringAsFixed(2)} ₽',
-          style: const TextStyle(fontSize: 11, color: Colors.grey),
-        ),
-
-        const SizedBox(height: 4),
-
-        // Процентное изменение
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Text(
-            '${difference >= 0 ? '+' : ''}${percent.toStringAsFixed(2)}%',
-            style: TextStyle(
-              fontSize: 12,
-              color: color,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ),
-      ],
-    );
+  void _showSnackBar(String message, Color color) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message), backgroundColor: color));
   }
 
   Widget _buildExistingSharesInputs() {
@@ -818,10 +405,7 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
       final stock = _stocks[i];
       final existingShares =
           int.tryParse(_existingSharesControllers[i].text) ?? 0;
-      final int lotSize = stock.lotSize;
-      final int lots = (existingShares / lotSize).floor();
-      final double lotPrice = stock.lastPrice * stock.lotSize;
-      final double cost = lots * lotPrice;
+      final double cost = existingShares * stock.lastPrice;
       existingCosts.add(cost);
       currentPortfolioValue += cost;
     }
@@ -845,9 +429,7 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(
-                        height: 10,
-                      ), // Добавляем небольшое расстояние между элементами в Column
+                      const SizedBox(height: 10),
                       ElevatedButton.icon(
                         onPressed: _rebalancePortfolio,
                         icon: const Icon(Icons.autorenew, size: 20),
@@ -900,106 +482,88 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
 
             // Сетка с Wrap
             Wrap(
-              spacing: 16.0, // горизонтальное расстояние
-              runSpacing: 16.0, // вертикальное расстояние
+              spacing: 16.0,
+              runSpacing: 16.0,
               children: List.generate(_stocks.length, (index) {
                 final stock = _stocks[index];
                 final existingShares =
                     int.tryParse(_existingSharesControllers[index].text) ?? 0;
-                final int lotSize = stock.lotSize;
-                final int lots = (existingShares / lotSize).floor();
-                final double lotPrice = stock.lastPrice * stock.lotSize;
-                final double cost = lots * lotPrice;
+                final double cost = existingShares * stock.lastPrice;
                 final double percentage = currentPortfolioValue > 0
                     ? (cost / currentPortfolioValue * 100)
                     : 0;
 
-                return LayoutBuilder(
-                  builder: (context, constraints) {
-                    // Определяем ширину в зависимости от доступного пространства
-                    double containerWidth = (constraints.maxWidth < 450)
-                        ? 154
-                        : 250;
-
-                    return SizedBox(
-                      width: containerWidth, // Используем вычисленную ширину
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          TextField(
-                            controller: _existingSharesControllers[index],
-                            keyboardType: TextInputType.number,
-                            decoration: InputDecoration(
-                              labelText: stock.shortName,
-                              border: const OutlineInputBorder(),
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 16,
-                              ),
-                            ),
-                            onChanged: (value) {
-                              setState(() {});
-                            },
+                return SizedBox(
+                  width: 154,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextField(
+                        controller: _existingSharesControllers[index],
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          labelText: stock.shortName,
+                          border: const OutlineInputBorder(),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 16,
                           ),
+                        ),
+                        onChanged: (value) {
+                          setState(() {});
+                        },
+                      ),
 
-                          // Отображение стоимости и процента (если есть акции)
-                          if (existingShares > 0) ...[
-                            const SizedBox(height: 8),
-                            Container(
-                              padding: const EdgeInsets.all(8.0),
-                              decoration: BoxDecoration(
-                                color: Colors.grey[50],
-                                borderRadius: BorderRadius.circular(8.0),
-                                border: Border.all(color: Colors.grey[300]!),
+                      // Отображение стоимости и процента
+                      if (existingShares > 0) ...[
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.all(8.0),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[50],
+                            borderRadius: BorderRadius.circular(8.0),
+                            border: Border.all(color: Colors.grey[300]!),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${cost.toStringAsFixed(2)} ₽',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.green,
+                                  fontWeight: FontWeight.w500,
+                                ),
                               ),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+                              const SizedBox(height: 4),
+                              Row(
                                 children: [
                                   Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          '${cost.toStringAsFixed(2)} ₽',
-                                          style: const TextStyle(
-                                            fontSize: 14,
-                                            color: Colors.green,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 6.0,
-                                      vertical: 6.0,
-                                    ),
-                                    decoration: BoxDecoration(
+                                    child: LinearProgressIndicator(
+                                      value: percentage / 100,
+                                      backgroundColor: Colors.grey[200],
                                       color: _getExistingPercentageColor(
                                         percentage,
                                       ),
-                                      borderRadius: BorderRadius.circular(16.0),
+                                      minHeight: 6,
                                     ),
-                                    child: Text(
-                                      '${percentage.toStringAsFixed(1)}%',
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    '${percentage.toStringAsFixed(1)}%',
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
                                     ),
                                   ),
                                 ],
                               ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    );
-                  },
+                            ],
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                 );
               }),
             ),
@@ -1030,11 +594,11 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
       (sum, allocation) => sum + allocation.existingCost,
     );
 
-    // Рассчитываем стандартное отклонение для оценки равномерности
-    final double averagePercentage = 100.0 / _allocations.length;
+    // Рассчитываем насколько равномерно распределены средства
+    final double targetPercentage = 100.0 / _allocations.length;
     double deviationSum = 0;
     for (final allocation in _allocations) {
-      deviationSum += (allocation.percentage - averagePercentage).abs();
+      deviationSum += (allocation.percentage - targetPercentage).abs();
     }
     final double averageDeviation = deviationSum / _allocations.length;
 
@@ -1059,12 +623,11 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
               'Среднее отклонение от равных долей: ${averageDeviation.toStringAsFixed(1)}%',
               style: TextStyle(
                 fontSize: 12,
-                color: averageDeviation < 10 ? Colors.green : Colors.orange,
+                color: averageDeviation < 5 ? Colors.green : Colors.orange,
               ),
             ),
             const SizedBox(height: 16),
 
-            // Показываем только акции, которые нужно докупить
             if (allocationsToShow.isEmpty)
               const Padding(
                 padding: EdgeInsets.all(16.0),
@@ -1084,11 +647,9 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
                   padding: const EdgeInsets.only(bottom: 16.0),
                   child: Column(
                     children: [
-                      // Показываем только информацию о покупке
                       LayoutBuilder(
                         builder: (context, constraints) {
                           if (constraints.maxWidth < 800) {
-                            // Версия для мобильных устройств (Column layout)
                             return Padding(
                               padding: const EdgeInsets.symmetric(
                                 vertical: 10.0,
@@ -1097,7 +658,6 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  // Первая строка: Название и количество лотов к покупке
                                   Row(
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceBetween,
@@ -1109,8 +669,7 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
                                           Text(
                                             allocation.stock.shortName,
                                             style: const TextStyle(
-                                              fontWeight: FontWeight
-                                                  .w600, // Сделаем название чуть жирнее
+                                              fontWeight: FontWeight.w600,
                                               fontSize: 18,
                                             ),
                                           ),
@@ -1127,19 +686,14 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
                                       Text(
                                         'Купить: ${allocation.lots} лотов',
                                         style: const TextStyle(
-                                          fontSize:
-                                              16, // Уменьшим немного размер шрифта
+                                          fontSize: 16,
                                           color: Colors.green,
                                           fontWeight: FontWeight.w500,
                                         ),
                                       ),
                                     ],
                                   ),
-
-                                  const Divider(
-                                    height: 20,
-                                  ), // Разделитель для визуального отделения
-                                  // Вторая строка: Стоимость и проценты
+                                  const SizedBox(height: 12),
                                   Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
@@ -1153,10 +707,9 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
                                         ),
                                       ),
                                       const SizedBox(height: 8),
-                                      // Используем Row для процентов, но без фиксированного SizedBox
                                       Row(
-                                        mainAxisAlignment: MainAxisAlignment
-                                            .spaceBetween, // Растягиваем по краям
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
                                         children: [
                                           Text(
                                             'Было: ${allocation.existingPercentage.toStringAsFixed(1)}%',
@@ -1181,7 +734,6 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
                               ),
                             );
                           } else {
-                            // Исходная версия для широких экранов (Row layout)
                             return Row(
                               children: [
                                 Expanded(
@@ -1242,9 +794,7 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
                                               color: Colors.grey,
                                             ),
                                           ),
-                                          const SizedBox(
-                                            width: 50,
-                                          ), // Фиксированный отступ для широких экранов
+                                          const SizedBox(width: 50),
                                           Text(
                                             'Станет: ${allocation.percentage.toStringAsFixed(1)}%',
                                             style: const TextStyle(
@@ -1255,7 +805,6 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
                                           ),
                                         ],
                                       ),
-                                      const SizedBox(height: 4),
                                     ],
                                   ),
                                 ),
@@ -1326,17 +875,6 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
                 ),
               ],
             ),
-            if (remaining > 0) ...[
-              const SizedBox(height: 8),
-              Text(
-                'Недостаточно средств для покупки дополнительных лотов',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.orange[700],
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-            ],
           ],
         ),
       ),
@@ -1364,76 +902,87 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
         ),
 
         Wrap(
-          spacing: 16.0, // горизонтальное расстояние
-          runSpacing: 16.0, // вертикальное расстояние
+          spacing: 16.0,
+          runSpacing: 16.0,
           children: List.generate(_stocks.length, (index) {
             final stock = _stocks[index];
 
-            return LayoutBuilder(
-              builder: (context, constraints) {
-                double sizedBoxWidth = constraints.maxWidth < 450 ? 170 : 250;
-                return SizedBox(
-                  width: sizedBoxWidth,
-                  child: Card(
-                    margin: const EdgeInsets.all(0),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+            return SizedBox(
+              width: 170,
+              child: Card(
+                margin: const EdgeInsets.all(0),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
                         children: [
-                          // Заголовок с тикером и названием
-                          Row(
-                            children: [
-                              CircleAvatar(
-                                backgroundColor: Colors.blue[50],
-                                radius: 16,
-                                child: Text(
-                                  stock.secId.substring(0, 1),
+                          CircleAvatar(
+                            backgroundColor: Colors.blue[50],
+                            radius: 16,
+                            child: Text(
+                              stock.secId.substring(0, 1),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  stock.shortName,
                                   style: const TextStyle(
-                                    fontSize: 12,
+                                    fontSize: 14,
                                     fontWeight: FontWeight.bold,
                                   ),
+                                  overflow: TextOverflow.ellipsis,
                                 ),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      stock.shortName,
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    Text(
-                                      stock.secId,
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                                  ],
+                                Text(
+                                  stock.secId,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey,
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-
-                          const SizedBox(height: 12),
-
-                          // Цена и SMA200
-                          _buildCompactPriceComparison(
-                            stock.lastPrice,
-                            stock.sma200,
+                              ],
+                            ),
                           ),
                         ],
                       ),
-                    ),
+
+                      const SizedBox(height: 12),
+
+                      // Цена
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${stock.lastPrice.toStringAsFixed(2)} ₽',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Лот: ${stock.lotSize} шт',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                );
-              },
+                ),
+              ),
             );
           }),
         ),
@@ -1445,7 +994,7 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Акции'),
+        title: const Text('Равномерное распределение'),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -1465,7 +1014,7 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
                 ),
               )
             : SingleChildScrollView(
-                padding: EdgeInsets.only(bottom: 18),
+                padding: const EdgeInsets.only(bottom: 18),
                 child: Column(
                   children: [
                     if (_error.isNotEmpty)
@@ -1532,10 +1081,7 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
                       ),
                     ),
 
-                    // Целевые доли (новый виджет)
-                    _buildTargetPercentages(),
-
-                    // Поля для ввода имеющихся акций (штук)
+                    // Поля для ввода имеющихся акций
                     _buildExistingSharesInputs(),
 
                     // Результаты распределения

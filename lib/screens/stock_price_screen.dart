@@ -27,7 +27,7 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
   void initState() {
     super.initState();
     for (int i = 0; i < StockService.stocksInfo.length; i++) {
-      _existingSharesControllers.add(TextEditingController(text: '0'));
+      _existingSharesControllers.add(TextEditingController(text: ''));
     }
     _fetchStockPrices();
   }
@@ -238,7 +238,7 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Равномерное распределение'),
+        title: const Text('Покупка акций'),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -343,7 +343,7 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
                             ),
                       ),
 
-                    StocksGrid(stocks: _stocks),
+                    AdaptiveStocksGrid(stocks: _stocks),
                   ],
                 ),
               ),

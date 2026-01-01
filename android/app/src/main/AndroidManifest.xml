@@ -6,7 +6,7 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />     
 
     <application
-        android:label="calc_inv"
+        android:label="Top-up"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

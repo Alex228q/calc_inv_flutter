@@ -5,12 +5,16 @@ class AllocationResults extends StatelessWidget {
   final List<StockAllocation> allocations;
   final double amount;
   final double remaining;
+  final bool useSmaAdjustment;
+  final List<double> targetPercentages;
 
   const AllocationResults({
     Key? key,
     required this.allocations,
     required this.amount,
     required this.remaining,
+    this.useSmaAdjustment = false,
+    required this.targetPercentages,
   }) : super(key: key);
 
   @override
@@ -28,10 +32,10 @@ class AllocationResults extends StatelessWidget {
       (sum, allocation) => sum + allocation.existingCost,
     );
 
-    final double targetPercentage = 100.0 / allocations.length;
     double deviationSum = 0;
-    for (final allocation in allocations) {
-      deviationSum += (allocation.percentage - targetPercentage).abs();
+    for (int i = 0; i < allocations.length; i++) {
+      final allocation = allocations[i];
+      deviationSum += (allocation.percentage - targetPercentages[i]).abs();
     }
     final double averageDeviation = deviationSum / allocations.length;
 
@@ -46,13 +50,44 @@ class AllocationResults extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Результаты распределения:',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Результаты распределения:',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                if (useSmaAdjustment)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.blue[50],
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.blue[200]!),
+                    ),
+                    child: const Row(
+                      children: [
+                        Icon(Icons.trending_up, size: 14, color: Colors.blue),
+                        SizedBox(width: 4),
+                        Text(
+                          'SMA200',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.blue,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
             ),
             const SizedBox(height: 8),
             Text(
-              'Среднее отклонение от равных долей: ${averageDeviation.toStringAsFixed(1)}%',
+              'Среднее отклонение от целевых долей: ${averageDeviation.toStringAsFixed(1)}%',
               style: TextStyle(
                 fontSize: 12,
                 color: averageDeviation < 5 ? Colors.green : Colors.orange,
@@ -81,6 +116,15 @@ class AllocationResults extends StatelessWidget {
                     children: [
                       LayoutBuilder(
                         builder: (context, constraints) {
+                          final stock = allocation.stock;
+                          final targetPercentage =
+                              targetPercentages[allocations.indexOf(
+                                allocation,
+                              )];
+                          final basePercentage = 100.0 / allocations.length;
+                          final smaAdjustment =
+                              targetPercentage - basePercentage;
+
                           if (constraints.maxWidth < 800) {
                             return Padding(
                               padding: const EdgeInsets.symmetric(
@@ -99,7 +143,7 @@ class AllocationResults extends StatelessWidget {
                                             CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            allocation.stock.shortName,
+                                            stock.shortName,
                                             style: const TextStyle(
                                               fontWeight: FontWeight.w600,
                                               fontSize: 18,
@@ -111,6 +155,19 @@ class AllocationResults extends StatelessWidget {
                                               style: const TextStyle(
                                                 fontSize: 11,
                                                 color: Colors.grey,
+                                              ),
+                                            ),
+                                          // Информация о SMA
+                                          if (useSmaAdjustment &&
+                                              stock.deviationFromSma != null)
+                                            Text(
+                                              'SMA200: ${stock.deviationFromSma!.toStringAsFixed(1)}%',
+                                              style: TextStyle(
+                                                fontSize: 10,
+                                                color:
+                                                    stock.deviationFromSma! > 0
+                                                    ? Colors.red[700]
+                                                    : Colors.green[700],
                                               ),
                                             ),
                                         ],
@@ -143,20 +200,50 @@ class AllocationResults extends StatelessWidget {
                                         mainAxisAlignment:
                                             MainAxisAlignment.spaceBetween,
                                         children: [
-                                          Text(
-                                            'Было: ${allocation.existingPercentage.toStringAsFixed(1)}%',
-                                            style: const TextStyle(
-                                              fontSize: 14,
-                                              color: Colors.grey,
-                                            ),
+                                          Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                'Было: ${allocation.existingPercentage.toStringAsFixed(1)}%',
+                                                style: const TextStyle(
+                                                  fontSize: 14,
+                                                  color: Colors.grey,
+                                                ),
+                                              ),
+                                              if (useSmaAdjustment &&
+                                                  smaAdjustment.abs() > 0.1)
+                                                Text(
+                                                  'Корр.: ${smaAdjustment > 0 ? '+' : ''}${smaAdjustment.toStringAsFixed(1)}%',
+                                                  style: TextStyle(
+                                                    fontSize: 10,
+                                                    color: smaAdjustment > 0
+                                                        ? Colors.green[700]
+                                                        : Colors.red[700],
+                                                  ),
+                                                ),
+                                            ],
                                           ),
-                                          Text(
-                                            'Станет: ${allocation.percentage.toStringAsFixed(1)}%',
-                                            style: const TextStyle(
-                                              fontSize: 14,
-                                              color: Colors.purple,
-                                              fontWeight: FontWeight.w500,
-                                            ),
+                                          Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.end,
+                                            children: [
+                                              Text(
+                                                'Станет: ${allocation.percentage.toStringAsFixed(1)}%',
+                                                style: const TextStyle(
+                                                  fontSize: 14,
+                                                  color: Colors.purple,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                              Text(
+                                                'Цель: ${targetPercentage.toStringAsFixed(1)}%',
+                                                style: TextStyle(
+                                                  fontSize: 10,
+                                                  color: Colors.grey[600],
+                                                ),
+                                              ),
+                                            ],
                                           ),
                                         ],
                                       ),
@@ -169,13 +256,13 @@ class AllocationResults extends StatelessWidget {
                             return Row(
                               children: [
                                 Expanded(
-                                  flex: 1,
+                                  flex: 2,
                                   child: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        allocation.stock.shortName,
+                                        stock.shortName,
                                         style: const TextStyle(
                                           fontWeight: FontWeight.w500,
                                           fontSize: 18,
@@ -187,6 +274,18 @@ class AllocationResults extends StatelessWidget {
                                           style: const TextStyle(
                                             fontSize: 11,
                                             color: Colors.grey,
+                                          ),
+                                        ),
+                                      // Информация о SMA
+                                      if (useSmaAdjustment &&
+                                          stock.deviationFromSma != null)
+                                        Text(
+                                          'Отклонение от SMA200: ${stock.deviationFromSma!.toStringAsFixed(1)}%',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: stock.deviationFromSma! > 0
+                                                ? Colors.red[700]
+                                                : Colors.green[700],
                                           ),
                                         ),
                                     ],
@@ -204,7 +303,7 @@ class AllocationResults extends StatelessWidget {
                                   ),
                                 ),
                                 Expanded(
-                                  flex: 1,
+                                  flex: 2,
                                   child: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
@@ -217,23 +316,36 @@ class AllocationResults extends StatelessWidget {
                                           fontWeight: FontWeight.w500,
                                         ),
                                       ),
+                                      const SizedBox(height: 8),
                                       Row(
                                         children: [
-                                          Text(
-                                            'Было: ${allocation.existingPercentage.toStringAsFixed(1)}%',
-                                            style: const TextStyle(
-                                              fontSize: 14,
-                                              color: Colors.grey,
-                                            ),
+                                          Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                'Было: ${allocation.existingPercentage.toStringAsFixed(1)}%',
+                                                style: const TextStyle(
+                                                  fontSize: 14,
+                                                  color: Colors.grey,
+                                                ),
+                                              ),
+                                            ],
                                           ),
-                                          const SizedBox(width: 50),
-                                          Text(
-                                            'Станет: ${allocation.percentage.toStringAsFixed(1)}%',
-                                            style: const TextStyle(
-                                              fontSize: 14,
-                                              color: Colors.purple,
-                                              fontWeight: FontWeight.w500,
-                                            ),
+                                          const SizedBox(width: 40),
+                                          Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.end,
+                                            children: [
+                                              Text(
+                                                'Станет: ${allocation.percentage.toStringAsFixed(1)}%',
+                                                style: const TextStyle(
+                                                  fontSize: 14,
+                                                  color: Colors.purple,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                            ],
                                           ),
                                         ],
                                       ),

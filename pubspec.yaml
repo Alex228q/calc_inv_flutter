@@ -22,7 +22,16 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/icons/
+    - assets/icons/X5.png
+    - assets/icons/MDMG.png
+    - assets/icons/NVTK.png
+    - assets/icons/GMKN.png
+    - assets/icons/PLZL.png
+    - assets/icons/SBERP.png
+    - assets/icons/CHMF.png
+    - assets/icons/TATNP.png
+    - assets/icons/PHOR.png
+    - assets/icons/YDEX.png
 
 msix_config:
   display_name: Calc App

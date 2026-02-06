@@ -6,6 +6,7 @@ class ExistingSharesInput extends StatefulWidget {
   final List<TextEditingController> controllers;
   final VoidCallback onRebalance;
   final ValueChanged<int>? onChanged;
+  final List<double> targetPercentages; // Добавим целевые доли
 
   const ExistingSharesInput({
     Key? key,
@@ -13,6 +14,7 @@ class ExistingSharesInput extends StatefulWidget {
     required this.controllers,
     required this.onRebalance,
     this.onChanged,
+    required this.targetPercentages,
   }) : super(key: key);
 
   @override
@@ -38,9 +40,20 @@ class _ExistingSharesInputState extends State<ExistingSharesInput> {
     return Colors.red;
   }
 
+  Color _getTargetDeviationColor(
+    double currentPercentage,
+    double targetPercentage,
+  ) {
+    final deviation = (currentPercentage - targetPercentage).abs();
+    if (deviation < 2) return Colors.green;
+    if (deviation < 5) return Colors.orange;
+    return Colors.red;
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentPortfolioValue = _calculateCurrentPortfolioValue();
+    final hasExistingShares = currentPortfolioValue > 0;
 
     return Card(
       margin: const EdgeInsets.all(8.0),
@@ -99,7 +112,7 @@ class _ExistingSharesInputState extends State<ExistingSharesInput> {
               },
             ),
 
-            if (currentPortfolioValue > 0) ...[
+            if (hasExistingShares) ...[
               const SizedBox(height: 8),
               Text(
                 'Текущая стоимость портфеля: ${currentPortfolioValue.toStringAsFixed(2)} ₽',
@@ -120,12 +133,13 @@ class _ExistingSharesInputState extends State<ExistingSharesInput> {
                 final existingShares =
                     int.tryParse(widget.controllers[index].text) ?? 0;
                 final double cost = existingShares * stock.lastPrice;
-                final double percentage = currentPortfolioValue > 0
+                final double currentPercentage = currentPortfolioValue > 0
                     ? (cost / currentPortfolioValue * 100)
                     : 0;
+                final double targetPercentage = widget.targetPercentages[index];
 
                 return SizedBox(
-                  width: 154,
+                  width: 170, // Немного увеличили ширину
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -159,6 +173,7 @@ class _ExistingSharesInputState extends State<ExistingSharesInput> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              // Стоимость
                               Text(
                                 '${cost.toStringAsFixed(2)} ₽',
                                 style: const TextStyle(
@@ -167,29 +182,111 @@ class _ExistingSharesInputState extends State<ExistingSharesInput> {
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
-                              const SizedBox(height: 4),
-                              Row(
+                              const SizedBox(height: 6),
+
+                              // Прогресс-бар текущей доли
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Expanded(
-                                    child: LinearProgressIndicator(
-                                      value: percentage / 100,
-                                      backgroundColor: Colors.grey[200],
-                                      color: _getExistingPercentageColor(
-                                        percentage,
-                                        widget.stocks.length,
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        'Текущая:',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey[600],
+                                        ),
                                       ),
-                                      minHeight: 6,
+                                      Text(
+                                        '${currentPercentage.toStringAsFixed(1)}%',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                          color: _getExistingPercentageColor(
+                                            currentPercentage,
+                                            widget.stocks.length,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+
+                              const SizedBox(height: 4),
+
+                              // Целевая доля и отклонение
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        'Целевая:',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey[600],
+                                        ),
+                                      ),
+                                      Text(
+                                        '${targetPercentage.toStringAsFixed(1)}%',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.blue[700],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ] else if (currentPortfolioValue == 0) ...[
+                        // Если портфель пустой, показываем только целевую долю
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.all(8.0),
+                          decoration: BoxDecoration(
+                            color: Colors.blue[50],
+                            borderRadius: BorderRadius.circular(8.0),
+                            border: Border.all(color: Colors.blue[200]!),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Целевая доля:',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: Colors.blue[800],
                                     ),
                                   ),
-                                  const SizedBox(width: 8),
                                   Text(
-                                    '${percentage.toStringAsFixed(1)}%',
-                                    style: const TextStyle(
+                                    '${targetPercentage.toStringAsFixed(1)}%',
+                                    style: TextStyle(
                                       fontSize: 12,
-                                      fontWeight: FontWeight.w500,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.blue[800],
                                     ),
                                   ),
                                 ],
+                              ),
+                              const SizedBox(height: 4),
+                              LinearProgressIndicator(
+                                value: targetPercentage / 100,
+                                backgroundColor: Colors.blue[100],
+                                color: Colors.blue[400],
+                                minHeight: 6,
                               ),
                             ],
                           ),

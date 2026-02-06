@@ -139,7 +139,7 @@ class _ExistingSharesInputState extends State<ExistingSharesInput> {
                 final double targetPercentage = widget.targetPercentages[index];
 
                 return SizedBox(
-                  width: 170, // Немного увеличили ширину
+                  width: 150, // Немного увеличили ширину
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [

@@ -157,19 +157,6 @@ class AllocationResults extends StatelessWidget {
                                                 color: Colors.grey,
                                               ),
                                             ),
-                                          // Информация о SMA
-                                          if (useSmaAdjustment &&
-                                              stock.deviationFromSma != null)
-                                            Text(
-                                              'SMA200: ${stock.deviationFromSma!.toStringAsFixed(1)}%',
-                                              style: TextStyle(
-                                                fontSize: 10,
-                                                color:
-                                                    stock.deviationFromSma! > 0
-                                                    ? Colors.red[700]
-                                                    : Colors.green[700],
-                                              ),
-                                            ),
                                         ],
                                       ),
                                       Text(
@@ -211,17 +198,6 @@ class AllocationResults extends StatelessWidget {
                                                   color: Colors.grey,
                                                 ),
                                               ),
-                                              if (useSmaAdjustment &&
-                                                  smaAdjustment.abs() > 0.1)
-                                                Text(
-                                                  'Корр.: ${smaAdjustment > 0 ? '+' : ''}${smaAdjustment.toStringAsFixed(1)}%',
-                                                  style: TextStyle(
-                                                    fontSize: 10,
-                                                    color: smaAdjustment > 0
-                                                        ? Colors.green[700]
-                                                        : Colors.red[700],
-                                                  ),
-                                                ),
                                             ],
                                           ),
                                           Column(
@@ -236,122 +212,114 @@ class AllocationResults extends StatelessWidget {
                                                   fontWeight: FontWeight.w500,
                                                 ),
                                               ),
-                                              Text(
-                                                'Цель: ${targetPercentage.toStringAsFixed(1)}%',
-                                                style: TextStyle(
-                                                  fontSize: 10,
-                                                  color: Colors.grey[600],
-                                                ),
-                                              ),
                                             ],
                                           ),
                                         ],
                                       ),
+                                      Divider(),
                                     ],
                                   ),
                                 ],
                               ),
                             );
                           } else {
-                            return Row(
+                            return Column(
                               children: [
-                                Expanded(
-                                  flex: 2,
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        stock.shortName,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.w500,
-                                          fontSize: 18,
-                                        ),
-                                      ),
-                                      if (allocation.existingLots > 0)
-                                        Text(
-                                          'Имеется: ${allocation.existingLots} лотов',
-                                          style: const TextStyle(
-                                            fontSize: 11,
-                                            color: Colors.grey,
-                                          ),
-                                        ),
-                                      // Информация о SMA
-                                      if (useSmaAdjustment &&
-                                          stock.deviationFromSma != null)
-                                        Text(
-                                          'Отклонение от SMA200: ${stock.deviationFromSma!.toStringAsFixed(1)}%',
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            color: stock.deviationFromSma! > 0
-                                                ? Colors.red[700]
-                                                : Colors.green[700],
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                                Expanded(
-                                  flex: 1,
-                                  child: Text(
-                                    'Купить: ${allocation.lots} лотов',
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      color: Colors.green,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ),
-                                Expanded(
-                                  flex: 2,
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'Стоимость: ${allocation.totalCost.toStringAsFixed(2)} ₽',
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          color: Colors.blue,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Row(
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      flex: 2,
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
-                                          Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                'Было: ${allocation.existingPercentage.toStringAsFixed(1)}%',
-                                                style: const TextStyle(
-                                                  fontSize: 14,
-                                                  color: Colors.grey,
-                                                ),
-                                              ),
-                                            ],
+                                          Text(
+                                            stock.shortName,
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.w500,
+                                              fontSize: 18,
+                                            ),
                                           ),
-                                          const SizedBox(width: 40),
-                                          Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.end,
+                                          if (allocation.existingLots > 0)
+                                            Text(
+                                              'Имеется: ${allocation.existingLots} лотов',
+                                              style: const TextStyle(
+                                                fontSize: 11,
+                                                color: Colors.grey,
+                                              ),
+                                            ),
+
+                                          // Информация о SMA
+                                        ],
+                                      ),
+                                    ),
+                                    Expanded(
+                                      flex: 1,
+                                      child: Text(
+                                        'Купить: ${allocation.lots} лотов',
+                                        style: const TextStyle(
+                                          fontSize: 18,
+                                          color: Colors.green,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      flex: 2,
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.end,
+                                        children: [
+                                          Text(
+                                            'Стоимость: ${allocation.totalCost.toStringAsFixed(2)} ₽',
+                                            style: const TextStyle(
+                                              fontSize: 16,
+                                              color: Colors.blue,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.end,
                                             children: [
-                                              Text(
-                                                'Станет: ${allocation.percentage.toStringAsFixed(1)}%',
-                                                style: const TextStyle(
-                                                  fontSize: 14,
-                                                  color: Colors.purple,
-                                                  fontWeight: FontWeight.w500,
-                                                ),
+                                              Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.end,
+                                                children: [
+                                                  Text(
+                                                    'Было: ${allocation.existingPercentage.toStringAsFixed(1)}%',
+                                                    style: const TextStyle(
+                                                      fontSize: 14,
+                                                      color: Colors.grey,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              const SizedBox(width: 40),
+                                              Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.end,
+                                                children: [
+                                                  Text(
+                                                    'Станет: ${allocation.percentage.toStringAsFixed(1)}%',
+                                                    style: const TextStyle(
+                                                      fontSize: 14,
+                                                      color: Colors.purple,
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
                                             ],
                                           ),
                                         ],
                                       ),
-                                    ],
-                                  ),
+                                    ),
+                                  ],
                                 ),
+                                Divider(),
                               ],
                             );
                           }

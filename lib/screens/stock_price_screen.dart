@@ -129,119 +129,6 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
     return normalized.map((w) => double.parse(w.toStringAsFixed(1))).toList();
   }
 
-  List<double> _distributeWeights(
-    List<double> weights,
-    double minP,
-    double maxP,
-  ) {
-    double currentSum = weights.fold(0, (a, b) => a + b);
-    double diff = 100.0 - currentSum;
-
-    // Если разница существенная, распределяем её пропорционально отклонению от базы
-    if (diff.abs() > 0.001) {
-      for (int iter = 0; iter < 5; iter++) {
-        // 5 итераций достаточно
-        double adaptableSum = 0;
-        for (var w in weights) {
-          if ((diff > 0 && w < maxP) || (diff < 0 && w > minP))
-            adaptableSum += w;
-        }
-
-        if (adaptableSum == 0) break;
-
-        for (int i = 0; i < weights.length; i++) {
-          if ((diff > 0 && weights[i] < maxP) ||
-              (diff < 0 && weights[i] > minP)) {
-            weights[i] += diff * (weights[i] / adaptableSum);
-            weights[i] = weights[i].clamp(minP, maxP);
-          }
-        }
-        currentSum = weights.fold(0, (a, b) => a + b);
-        diff = 100.0 - currentSum;
-      }
-    }
-
-    return _finalizeWeights(weights, minP, maxP);
-  }
-
-  List<double> _finalizeWeights(
-    List<double> weights,
-    double minP,
-    double maxP,
-  ) {
-    List<double> rounded = weights
-        .map((w) => double.parse(w.toStringAsFixed(1)))
-        .toList();
-
-    double currentSum = double.parse(
-      rounded.fold(0.0, (a, b) => a + b).toStringAsFixed(1),
-    );
-    double diff = double.parse((100.0 - currentSum).toStringAsFixed(1));
-
-    if (diff == 0) return rounded;
-
-    int steps = (diff.abs() * 10).round();
-    double stepValue = diff > 0 ? 0.1 : -0.1;
-
-    // Чтобы не портить логику, применяем изменения к тем, кто дальше от границ
-    for (int s = 0; s < steps; s++) {
-      int? bestIndex;
-      double bestMargin = -1.0;
-
-      for (int i = 0; i < rounded.length; i++) {
-        double margin = diff > 0 ? (maxP - rounded[i]) : (rounded[i] - minP);
-        if (margin > bestMargin && margin >= 0.1) {
-          bestMargin = margin;
-          bestIndex = i;
-        }
-      }
-
-      if (bestIndex != null) {
-        rounded[bestIndex] = double.parse(
-          (rounded[bestIndex] + stepValue).toStringAsFixed(1),
-        );
-      } else {
-        // Если мы здесь, значит все бумаги УЖЕ на границах (математический тупик)
-        // Для 10 акций это невозможно, но для надежности оставим:
-        break;
-      }
-    }
-
-    return rounded;
-  }
-
-  List<double> _normalize(List<double> weights, double minP, double maxP) {
-    int iterations = 0;
-    while (iterations < 10) {
-      // Ограничиваем итерации для безопасности
-      double currentSum = weights.fold(0, (a, b) => a + b);
-      double diff = 100.0 - currentSum;
-
-      if (diff.abs() < 0.001) break;
-
-      // Распределяем разницу между элементами, которые еще не уперлись в границы
-      double adaptableSum = 0;
-      for (var w in weights) {
-        if ((diff > 0 && w < maxP) || (diff < 0 && w > minP)) {
-          adaptableSum += w;
-        }
-      }
-
-      if (adaptableSum == 0) break; // Все элементы на границах
-
-      for (int i = 0; i < weights.length; i++) {
-        if ((diff > 0 && weights[i] < maxP) ||
-            (diff < 0 && weights[i] > minP)) {
-          weights[i] += diff * (weights[i] / adaptableSum);
-          weights[i] = weights[i].clamp(minP, maxP);
-        }
-      }
-      iterations++;
-    }
-
-    return _finalizeWeights(weights, 7.5, 12.5);
-  }
-
   void _rebalancePortfolio() {
     if (_stocks.isEmpty) {
       _showSnackBar('Нет данных об акциях для ребалансировки', Colors.red);
@@ -613,70 +500,6 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
     }
   }
 
-  void _distributeRemainingEvenly(
-    List<Map<String, dynamic>> stockData,
-    double remainingAmount,
-  ) {
-    // Создаем список акций, которые можно докупить
-    List<Map<String, dynamic>> availableStocks = [];
-
-    for (var data in stockData) {
-      double lotCost = data['lotCost'];
-      double currentCost = data['currentCost'];
-      double targetAmount = data['targetAmount'];
-
-      // Акция доступна для покупки если:
-      // 1. Есть деньги на лот
-      // 2. Не перекуплена более чем на 2%
-      if (lotCost <= remainingAmount && currentCost <= targetAmount * 1.02) {
-        availableStocks.add(data);
-      }
-    }
-
-    // Если нет доступных акций, выходим
-    if (availableStocks.isEmpty) return;
-
-    // Покупаем по кругу пока есть деньги
-    bool distributed = true;
-    while (remainingAmount > 0 && distributed && availableStocks.isNotEmpty) {
-      distributed = false;
-
-      // Сортируем по количеству купленных лотов (меньше - первыми)
-      availableStocks.sort((a, b) => a['lots'].compareTo(b['lots']));
-
-      // Создаем копию списка для безопасной итерации
-      final List<Map<String, dynamic>> stocksToProcess = List.from(
-        availableStocks,
-      );
-
-      for (var data in stocksToProcess) {
-        double lotCost = data['lotCost'];
-        double currentCost = data['currentCost'];
-        double targetAmount = data['targetAmount'];
-
-        // Проверяем, можно ли еще купить этот лот
-        if (lotCost <= remainingAmount &&
-            currentCost + lotCost <= targetAmount * 1.02) {
-          // Покупаем лот
-          data['lots'] = data['lots'] + 1;
-          data['currentCost'] = data['currentCost'] + lotCost;
-          remainingAmount -= lotCost;
-          distributed = true;
-
-          // Обновляем доступные акции
-          if (currentCost + lotCost > targetAmount * 1.02 ||
-              lotCost > remainingAmount) {
-            availableStocks.remove(data);
-          }
-
-          if (remainingAmount <= 0) break;
-        } else {
-          availableStocks.remove(data);
-        }
-      }
-    }
-  }
-
   void _showSnackBar(String message, Color color) {
     ScaffoldMessenger.of(
       context,
@@ -685,15 +508,6 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
 
   void _onShareChanged(int index) {
     setState(() {});
-  }
-
-  void _toggleSmaAdjustment() {
-    setState(() {
-      _useSmaAdjustment = !_useSmaAdjustment;
-      if (_showAllocation) {
-        _calculateAllocation();
-      }
-    });
   }
 
   @override

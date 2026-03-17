@@ -389,15 +389,13 @@ class AdaptiveStocksGrid extends StatelessWidget {
     // Список доступных логотипов в assets
     final availableLogos = [
       'X5.png',
-      'MDMG.png',
       'NVTK.png',
-      'GMKN.png',
       'PLZL.png',
       'SBERP.png',
-      'CHMF.png',
       'TATNP.png',
       'PHOR.png',
       'YDEX.png',
+      'OZON.png',
     ];
 
     final logoFileName = '$ticker.png';

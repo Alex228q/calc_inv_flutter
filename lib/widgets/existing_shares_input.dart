@@ -6,7 +6,7 @@ class ExistingSharesInput extends StatefulWidget {
   final List<TextEditingController> controllers;
   final VoidCallback onRebalance;
   final ValueChanged<int>? onChanged;
-  final List<double> targetPercentages; // Добавим целевые доли
+  final List<double> targetPercentages;
 
   const ExistingSharesInput({
     Key? key,
@@ -33,6 +33,7 @@ class _ExistingSharesInputState extends State<ExistingSharesInput> {
   }
 
   Color _getExistingPercentageColor(double percentage, int stockCount) {
+    if (stockCount == 0) return Colors.grey;
     final average = 100.0 / stockCount;
     final deviation = (percentage - average).abs();
     if (deviation < 5) return Colors.green;
@@ -40,20 +41,14 @@ class _ExistingSharesInputState extends State<ExistingSharesInput> {
     return Colors.red;
   }
 
-  Color _getTargetDeviationColor(
-    double currentPercentage,
-    double targetPercentage,
-  ) {
-    final deviation = (currentPercentage - targetPercentage).abs();
-    if (deviation < 2) return Colors.green;
-    if (deviation < 5) return Colors.orange;
-    return Colors.red;
-  }
-
   @override
   Widget build(BuildContext context) {
     final currentPortfolioValue = _calculateCurrentPortfolioValue();
     final hasExistingShares = currentPortfolioValue > 0;
+
+    // Безопасная проверка targetPercentages
+    final bool hasValidTargets =
+        widget.targetPercentages.length == widget.stocks.length;
 
     return Card(
       margin: const EdgeInsets.all(8.0),
@@ -125,178 +120,188 @@ class _ExistingSharesInputState extends State<ExistingSharesInput> {
             ],
             const SizedBox(height: 12),
 
-            Wrap(
-              spacing: 16.0,
-              runSpacing: 16.0,
-              children: List.generate(widget.stocks.length, (index) {
-                final stock = widget.stocks[index];
-                final existingShares =
-                    int.tryParse(widget.controllers[index].text) ?? 0;
-                final double cost = existingShares * stock.lastPrice;
-                final double currentPercentage = currentPortfolioValue > 0
-                    ? (cost / currentPortfolioValue * 100)
-                    : 0;
-                final double targetPercentage = widget.targetPercentages[index];
+            // Добавляем проверку на пустой список
+            if (widget.stocks.isEmpty)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Text('Нет данных об акциях'),
+                ),
+              )
+            else
+              Wrap(
+                spacing: 16.0,
+                runSpacing: 16.0,
+                children: List.generate(widget.stocks.length, (index) {
+                  // Безопасное получение targetPercentage
+                  final double targetPercentage =
+                      hasValidTargets && index < widget.targetPercentages.length
+                      ? widget.targetPercentages[index]
+                      : 100.0 /
+                            widget
+                                .stocks
+                                .length; // fallback к равномерному распределению
 
-                return SizedBox(
-                  width: 150, // Немного увеличили ширину
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      TextField(
-                        controller: widget.controllers[index],
-                        keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
-                          labelText: stock.shortName,
-                          border: const OutlineInputBorder(),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 16,
+                  final stock = widget.stocks[index];
+                  final existingShares =
+                      int.tryParse(widget.controllers[index].text) ?? 0;
+                  final double cost = existingShares * stock.lastPrice;
+                  final double currentPercentage = currentPortfolioValue > 0
+                      ? (cost / currentPortfolioValue * 100)
+                      : 0;
+
+                  return SizedBox(
+                    width: 150,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        TextField(
+                          controller: widget.controllers[index],
+                          keyboardType: TextInputType.number,
+                          decoration: InputDecoration(
+                            labelText: stock.shortName,
+                            border: const OutlineInputBorder(),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 16,
+                            ),
                           ),
+                          onChanged: (value) {
+                            if (widget.onChanged != null) {
+                              widget.onChanged!(index);
+                            }
+                          },
                         ),
-                        onChanged: (value) {
-                          if (widget.onChanged != null) {
-                            widget.onChanged!(index);
-                          }
-                        },
-                      ),
 
-                      if (existingShares > 0) ...[
-                        const SizedBox(height: 8),
-                        Container(
-                          padding: const EdgeInsets.all(8.0),
-                          decoration: BoxDecoration(
-                            color: Colors.grey[50],
-                            borderRadius: BorderRadius.circular(8.0),
-                            border: Border.all(color: Colors.grey[300]!),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Стоимость
-                              Text(
-                                '${cost.toStringAsFixed(2)} ₽',
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.green,
-                                  fontWeight: FontWeight.w500,
+                        if (existingShares > 0) ...[
+                          const SizedBox(height: 8),
+                          Container(
+                            padding: const EdgeInsets.all(8.0),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[50],
+                              borderRadius: BorderRadius.circular(8.0),
+                              border: Border.all(color: Colors.grey[300]!),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '${cost.toStringAsFixed(2)} ₽',
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.green,
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(height: 6),
-
-                              // Прогресс-бар текущей доли
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        'Текущая:',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.grey[600],
-                                        ),
-                                      ),
-                                      Text(
-                                        '${currentPercentage.toStringAsFixed(1)}%',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w600,
-                                          color: _getExistingPercentageColor(
-                                            currentPercentage,
-                                            widget.stocks.length,
+                                const SizedBox(height: 6),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          'Текущая:',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey[600],
                                           ),
                                         ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-
-                              const SizedBox(height: 4),
-
-                              // Целевая доля и отклонение
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        'Целевая:',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.grey[600],
+                                        Text(
+                                          '${currentPercentage.toStringAsFixed(1)}%',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w600,
+                                            color: _getExistingPercentageColor(
+                                              currentPercentage,
+                                              widget.stocks.length,
+                                            ),
+                                          ),
                                         ),
-                                      ),
-                                      Text(
-                                        '${targetPercentage.toStringAsFixed(1)}%',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w600,
-                                          color: Colors.blue[700],
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          'Целевая:',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey[600],
+                                          ),
                                         ),
+                                        Text(
+                                          '${targetPercentage.toStringAsFixed(1)}%',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.blue[700],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ] else if (currentPortfolioValue == 0) ...[
+                          const SizedBox(height: 8),
+                          Container(
+                            padding: const EdgeInsets.all(8.0),
+                            decoration: BoxDecoration(
+                              color: Colors.blue[50],
+                              borderRadius: BorderRadius.circular(8.0),
+                              border: Border.all(color: Colors.blue[200]!),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      'Целевая доля:',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: Colors.blue[800],
                                       ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ] else if (currentPortfolioValue == 0) ...[
-                        // Если портфель пустой, показываем только целевую долю
-                        const SizedBox(height: 8),
-                        Container(
-                          padding: const EdgeInsets.all(8.0),
-                          decoration: BoxDecoration(
-                            color: Colors.blue[50],
-                            borderRadius: BorderRadius.circular(8.0),
-                            border: Border.all(color: Colors.blue[200]!),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    'Целевая доля:',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: Colors.blue[800],
                                     ),
-                                  ),
-                                  Text(
-                                    '${targetPercentage.toStringAsFixed(1)}%',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.blue[800],
+                                    Text(
+                                      '${targetPercentage.toStringAsFixed(1)}%',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.blue[800],
+                                      ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 4),
-                              LinearProgressIndicator(
-                                value: targetPercentage / 100,
-                                backgroundColor: Colors.blue[100],
-                                color: Colors.blue[400],
-                                minHeight: 6,
-                              ),
-                            ],
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                LinearProgressIndicator(
+                                  value: targetPercentage / 100,
+                                  backgroundColor: Colors.blue[100],
+                                  color: Colors.blue[400],
+                                  minHeight: 6,
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
+                        ],
                       ],
-                    ],
-                  ),
-                );
-              }),
-            ),
+                    ),
+                  );
+                }),
+              ),
           ],
         ),
       ),

@@ -172,9 +172,9 @@ class AdaptiveStocksGrid extends StatelessWidget {
               ),
               SizedBox(width: 16),
               SizedBox(
-                width: 100,
+                width: 120, // Увеличили ширину для рейтинга
                 child: Text(
-                  'SMA200',
+                  'SMA200 / Рейтинг',
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 12,
@@ -293,13 +293,14 @@ class AdaptiveStocksGrid extends StatelessWidget {
 
                   const SizedBox(width: 16),
 
-                  // Информация о SMA
+                  // Информация о SMA и РЕЙТИНГ (ДОБАВЛЕНО)
                   SizedBox(
-                    width: 100,
+                    width: 160,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (stock.deviationFromSma != null)
+                        if (stock.deviationFromSma != null) ...[
+                          // Процент отклонения
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 8,
@@ -341,8 +342,39 @@ class AdaptiveStocksGrid extends StatelessWidget {
                                 ),
                               ],
                             ),
-                          )
-                        else
+                          ),
+
+                          const SizedBox(height: 4),
+
+                          // Текстовый рейтинг (ДОБАВЛЕНО)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: getRatingColor(
+                                stock.deviationFromSma,
+                              ).withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(
+                                color: getRatingColor(
+                                  stock.deviationFromSma,
+                                ).withOpacity(0.3),
+                              ),
+                            ),
+                            child: Text(
+                              getRating(stock.deviationFromSma),
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w500,
+                                color: getRatingColor(stock.deviationFromSma),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ] else
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 8,
@@ -396,6 +428,10 @@ class AdaptiveStocksGrid extends StatelessWidget {
       'PHOR.png',
       'YDEX.png',
       'OZON.png',
+      'CHMF.png',
+      'MDMG.png',
+      'TRNFP.png',
+      'GMKN.png',
     ];
 
     final logoFileName = '$ticker.png';

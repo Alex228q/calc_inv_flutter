@@ -82,11 +82,12 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
     }
 
     final int stockCount = _stocks.length;
-    const double minP = 8.5;
-    const double maxP = 16.5;
-    final double basePercentage = 100.0 / stockCount;
+    final double basePercentage = 100.0 / stockCount; // Для 10 компаний = 10%
 
-    print('\n=== РАСЧЕТ ЦЕЛЕВЫХ ДОЛЕЙ (КОРРЕКТИРОВКА ±4%) ===');
+    print(
+      '\n=== РАСЧЕТ ЦЕЛЕВЫХ ДОЛЕЙ (КОРРЕКТИРОВКА ±2% ОТ ${basePercentage.toStringAsFixed(1)}%) ===',
+    );
+    print('Количество компаний: $stockCount');
 
     // Шаг 1: Анализируем отклонения от SMA
     List<Map<String, dynamic>> stockAnalysis = [];
@@ -95,46 +96,43 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
       final stock = _stocks[i];
       double deviation = stock.deviationFromSma ?? 0;
 
-      // Рассчитываем корректировку на основе отклонения
+      // Рассчитываем корректировку на основе отклонения в пределах ±2%
       double adjustment = 0;
       String rating;
 
       if (deviation < -15) {
-        adjustment = 3.5;
+        adjustment = 2.0;
         rating = "Крайне недооценена";
       } else if (deviation < -10) {
-        adjustment = 3.0;
+        adjustment = 1.5;
         rating = "Сильно недооценена";
       } else if (deviation < -5) {
-        adjustment = 2.0;
+        adjustment = 1.0;
         rating = "Умеренно недооценена";
       } else if (deviation < -2) {
-        adjustment = 1.0;
+        adjustment = 0.5;
         rating = "Слегка недооценена";
       } else if (deviation < 2) {
         adjustment = 0.0;
         rating = "Около справедливой";
       } else if (deviation < 5) {
-        adjustment = -1.0;
+        adjustment = -0.5;
         rating = "Слегка переоценена";
       } else if (deviation < 10) {
-        adjustment = -2.0;
+        adjustment = -1.0;
         rating = "Умеренно переоценена";
       } else if (deviation < 15) {
-        adjustment = -3.0;
+        adjustment = -1.5;
         rating = "Сильно переоценена";
       } else {
-        adjustment = -3.5;
+        adjustment = -2.0;
         rating = "Крайне переоценена";
       }
 
-      // Ограничиваем корректировку коридором ±4%
-      adjustment = adjustment.clamp(-4.0, 4.0);
+      // Ограничиваем корректировку строго ±2%
+      adjustment = adjustment.clamp(-2.0, 2.0);
 
       double target = basePercentage + adjustment;
-
-      // Финальное ограничение диапазоном
-      target = target.clamp(minP, maxP);
 
       stockAnalysis.add({
         'index': i,
@@ -149,7 +147,7 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
         '${stock.shortName}: отклонение ${deviation.toStringAsFixed(1)}% - $rating',
       );
       print(
-        '  → корректировка: ${adjustment.toStringAsFixed(1)}%, целевая доля: ${target.toStringAsFixed(1)}%',
+        '  → корректировка: ${adjustment.toStringAsFixed(1)}%, целевая доля: ${target.toStringAsFixed(2)}%',
       );
     }
 
@@ -163,8 +161,8 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
     print('\nСумма до нормализации: ${sum.toStringAsFixed(4)}%');
     print('Нужно добавить: ${(100 - sum).toStringAsFixed(4)}%');
 
-    // Шаг 4: Нормализация до 100% с минимальными изменениями
-    List<double> normalized = _normalizeWithProportions(weights, minP, maxP);
+    // Шаг 4: Нормализация до 100% (простое пропорциональное масштабирование)
+    List<double> normalized = _normalizeToSum(weights, 100.0);
 
     // Шаг 5: Финальная проверка
     print('\n=== ИТОГОВЫЕ ЦЕЛЕВЫЕ ДОЛИ ===');
@@ -181,30 +179,25 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
     return normalized;
   }
 
-  List<double> _normalizeWithProportions(
-    List<double> weights,
-    double minP,
-    double maxP,
-  ) {
+  List<double> _normalizeToSum(List<double> weights, double targetSum) {
     final int count = weights.length;
-    double sum = weights.fold(0.0, (a, b) => a + b);
+    double currentSum = weights.fold(0.0, (a, b) => a + b);
 
-    print('\n--- НОРМАЛИЗАЦИЯ (МИНИМАЛЬНЫЕ ИЗМЕНЕНИЯ) ---');
-    print('Сумма до нормализации: ${sum.toStringAsFixed(4)}%');
-    print('Нужно добавить: ${(100 - sum).toStringAsFixed(4)}%');
+    print('\n--- НОРМАЛИЗАЦИЯ ДО ${targetSum}% ---');
+    print('Текущая сумма: ${currentSum.toStringAsFixed(4)}%');
 
     // Защита от деления на ноль
-    if (sum.abs() < 0.0001) {
-      return List.filled(count, 100.0 / count);
+    if (currentSum.abs() < 0.0001) {
+      return List.filled(count, targetSum / count);
     }
 
-    // Если сумма уже близка к 100, возвращаем с округлением
-    if ((sum - 100.0).abs() < 0.01) {
+    // Если сумма уже близка к целевой, возвращаем с округлением
+    if ((currentSum - targetSum).abs() < 0.01) {
       return weights.map((w) => double.parse(w.toStringAsFixed(1))).toList();
     }
 
-    // Масштабируем пропорционально (минимальные изменения)
-    double factor = 100.0 / sum;
+    // Простое пропорциональное масштабирование
+    double factor = targetSum / currentSum;
     List<double> normalized = weights.map((w) => w * factor).toList();
 
     print('Коэффициент масштабирования: ${factor.toStringAsFixed(4)}');
@@ -214,61 +207,6 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
       );
     }
 
-    // Проверяем границы и корректируем с минимальными изменениями
-    bool hasViolations = true;
-    int iterations = 0;
-    const maxIterations = 50;
-
-    while (hasViolations && iterations < maxIterations) {
-      hasViolations = false;
-
-      for (int i = 0; i < count; i++) {
-        if (normalized[i] < minP - 0.01) {
-          hasViolations = true;
-          double excess = minP - normalized[i];
-          normalized[i] = minP;
-          print(
-            '  ${_stocks[i].shortName}: подняли до мин ${minP}% (избыток ${excess.toStringAsFixed(2)}%)',
-          );
-          _redistributeExcessMinimal(normalized, i, excess, maxP, minP, maxP);
-        } else if (normalized[i] > maxP + 0.01) {
-          hasViolations = true;
-          double excess = normalized[i] - maxP;
-          normalized[i] = maxP;
-          print(
-            '  ${_stocks[i].shortName}: опустили до макс ${maxP}% (избыток ${excess.toStringAsFixed(2)}%)',
-          );
-          _redistributeExcessMinimal(normalized, i, excess, minP, minP, maxP);
-        }
-      }
-
-      iterations++;
-    }
-
-    // Финальная корректировка до 100%
-    sum = normalized.fold(0.0, (a, b) => a + b);
-    double diff = 100.0 - sum;
-
-    if (diff.abs() > 0.01) {
-      print('\nФинальная корректировка: нужно ${diff.toStringAsFixed(3)}%');
-
-      // Распределяем разницу пропорционально текущим весам
-      for (int i = 0; i < count; i++) {
-        double proportion = normalized[i] / sum;
-        double adjustment = diff * proportion;
-        normalized[i] += adjustment;
-        print(
-          '  ${_stocks[i].shortName}: +${adjustment.toStringAsFixed(3)}% → ${normalized[i].toStringAsFixed(3)}%',
-        );
-      }
-
-      // Проверяем границы после финальной корректировки
-      for (int i = 0; i < count; i++) {
-        if (normalized[i] < minP) normalized[i] = minP;
-        if (normalized[i] > maxP) normalized[i] = maxP;
-      }
-    }
-
     // Округляем до 1 знака для отображения
     List<double> result = normalized
         .map((w) => double.parse(w.toStringAsFixed(1)))
@@ -276,11 +214,16 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
 
     // Проверяем сумму после округления
     double roundedSum = result.fold(0.0, (a, b) => a + b);
-    if ((roundedSum - 100.0).abs() > 0.1) {
+    if ((roundedSum - targetSum).abs() > 0.1) {
       // Корректируем последний элемент
-      double lastAdjustment = 100.0 - roundedSum;
+      double lastAdjustment = targetSum - roundedSum;
       result[count - 1] = double.parse(
         (result[count - 1] + lastAdjustment).toStringAsFixed(1),
+      );
+
+      print('\nКорректировка после округления:');
+      print(
+        '  Добавлено к последнему элементу: ${lastAdjustment.toStringAsFixed(2)}%',
       );
     }
 
@@ -291,71 +234,6 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
     print('Сумма: ${result.fold(0.0, (a, b) => a + b).toStringAsFixed(1)}%');
 
     return result;
-  }
-
-  void _redistributeExcessMinimal(
-    List<double> values,
-    int excludeIndex,
-    double excess,
-    double bound,
-    double minP,
-    double maxP,
-  ) {
-    final int count = values.length;
-    double totalAvailable = 0;
-    List<int> availableIndices = [];
-
-    // Собираем индексы, которые могут принять избыток
-    for (int i = 0; i < count; i++) {
-      if (i != excludeIndex) {
-        if (bound == maxP) {
-          // Нужно добавить вес (при выходе за minP)
-          if (values[i] < bound) {
-            totalAvailable += (bound - values[i]);
-            availableIndices.add(i);
-          }
-        } else {
-          // Нужно убавить вес (при выходе за maxP)
-          if (values[i] > bound) {
-            totalAvailable += (values[i] - bound);
-            availableIndices.add(i);
-          }
-        }
-      }
-    }
-
-    if (totalAvailable <= 0.0001 || availableIndices.isEmpty) {
-      print('    Нет доступного пространства для перераспределения');
-      return;
-    }
-
-    // Распределяем избыток пропорционально доступному пространству
-    double remainingExcess = excess;
-    for (int index in availableIndices) {
-      if (remainingExcess.abs() <= 0.0001) break;
-
-      double available = bound == maxP
-          ? bound - values[index]
-          : values[index] - bound;
-
-      double proportion = available / totalAvailable;
-      double adjustment = remainingExcess * proportion;
-
-      double oldValue = values[index];
-
-      if (bound == maxP) {
-        values[index] = (values[index] + adjustment).clamp(minP, maxP);
-      } else {
-        values[index] = (values[index] - adjustment).clamp(minP, maxP);
-      }
-
-      double actualAdjustment = values[index] - oldValue;
-      remainingExcess -= actualAdjustment;
-
-      print(
-        '    ${_stocks[index].shortName}: ${oldValue.toStringAsFixed(2)}% → ${values[index].toStringAsFixed(2)}% (корр: ${actualAdjustment.toStringAsFixed(2)}%)',
-      );
-    }
   }
 
   void _rebalancePortfolio() {

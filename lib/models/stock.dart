@@ -1,3 +1,32 @@
+import 'package:flutter/material.dart';
+
+String getRating(double? deviation) {
+  if (deviation == null) return 'Нет данных';
+
+  if (deviation < -15) return 'Крайне недооценена';
+  if (deviation < -10) return 'Сильно недооценена';
+  if (deviation < -5) return 'Умеренно недооценена';
+  if (deviation < -2) return 'Слегка недооценена';
+  if (deviation < 2) return 'Около справедливой';
+  if (deviation < 5) return 'Слегка переоценена';
+  if (deviation < 10) return 'Умеренно переоценена';
+  if (deviation < 15) return 'Сильно переоценена';
+  return 'Крайне переоценена';
+}
+
+Color getRatingColor(double? deviation) {
+  if (deviation == null) return Colors.grey;
+
+  if (deviation < -15) return Colors.green.shade900;
+  if (deviation < -10) return Colors.green.shade700;
+  if (deviation < -5) return Colors.green.shade500;
+  if (deviation < -2) return Colors.green.shade300;
+  if (deviation < 2) return Colors.grey;
+  if (deviation < 5) return Colors.orange.shade300;
+  if (deviation < 10) return Colors.orange.shade500;
+  if (deviation < 15) return Colors.red.shade300;
+  return Colors.red.shade700;
+}
 
 class Stock {
   final String secId;

@@ -295,7 +295,7 @@ class AdaptiveStocksGrid extends StatelessWidget {
 
                   // Информация о SMA и РЕЙТИНГ (ДОБАВЛЕНО)
                   SizedBox(
-                    width: 160,
+                    width: 140,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -430,8 +430,6 @@ class AdaptiveStocksGrid extends StatelessWidget {
       'OZON.png',
       'CHMF.png',
       'MDMG.png',
-      'TRNFP.png',
-      'GMKN.png',
     ];
 
     final logoFileName = '$ticker.png';

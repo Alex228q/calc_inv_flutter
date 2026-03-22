@@ -25,8 +25,8 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
   bool _isLoadingSma = false;
   int _stocksWithSma = 0;
 
-  // Кэшируем целевые проценты
   List<double>? _cachedTargetPercentages;
+  Set<int>? _cachedExcludedIndices;
 
   @override
   void initState() {
@@ -45,6 +45,7 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
       _showAllocation = false;
       _stocksWithSma = 0;
       _cachedTargetPercentages = null;
+      _cachedExcludedIndices = null;
     });
 
     try {
@@ -68,89 +69,110 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
     }
   }
 
-  /// УЛУЧШЕННЫЙ АЛГОРИТМ РАСЧЕТА
+  /// УЛУЧШЕННЫЙ АЛГОРИТМ РАСЧЕТА ЦЕЛЕЙ
+  /// Учитывает исключенные акции и перераспределяет их доли
   List<double> _calculateTargetPercentages() {
     if (_stocks.isEmpty) return [];
-    if (_cachedTargetPercentages != null) return _cachedTargetPercentages!;
+    if (_cachedTargetPercentages != null && _cachedExcludedIndices != null) {
+      return _cachedTargetPercentages!;
+    }
 
     final int stockCount = _stocks.length;
-    final double basePercentage = 100.0 / stockCount;
+    const double overvaluationThreshold = 10.0;
 
-    print('\n=== РАСЧЕТ ЦЕЛЕВЫХ ДОЛЕЙ (ПЛАВНАЯ КОРРЕКТИРОВКА) ===');
-    print('Базовая доля: ${basePercentage.toStringAsFixed(1)}%');
+    print(
+      '\n=== РАСЧЕТ ЦЕЛЕВЫХ ДОЛЕЙ (ПЛАВНАЯ КОРРЕКТИРОВКА + ПЕРЕРАСПРЕДЕЛЕНИЕ) ===',
+    );
 
     // Параметры алгоритма
-    const double maxAdjustment = 3.0; // Максимальное отклонение от базы (±3%)
-    const double deviationCap =
-        20.0; // Отклонение, при котором достигается максимум корректировки
+    const double maxAdjustment = 3.0;
+    const double deviationCap = 20.0;
 
     List<double> rawWeights = [];
+    Set<int> excludedIndices = {};
 
-    for (final stock in _stocks) {
+    // 1. Проход 1: Определяем базовые веса и исключения
+    List<double> baseWeights = [];
+    double activeWeightSum = 0.0;
+
+    for (int i = 0; i < _stocks.length; i++) {
+      final stock = _stocks[i];
       double deviation = stock.deviationFromSma ?? 0;
 
-      // Линейное отображение отклонения на корректировку.
-      // deviation: -20 -> adjustment: +3 (покупаем больше)
-      // deviation:   0 -> adjustment:  0 (нейтрально)
-      // deviation: +20 -> adjustment: -3 (покупаем меньше)
+      // Проверка на переоцененность
+      if (deviation >= overvaluationThreshold) {
+        baseWeights.add(0.0); // Временно 0
+        excludedIndices.add(i);
+        print('${stock.shortName}: ПЕРЕОЦЕНЕНА -> ИСКЛЮЧЕНА');
+        continue;
+      }
 
       double adjustment = 0;
-
       if (deviation != 0) {
-        // Нормализуем отклонение в диапазон от -1 до 1
         double normalizedDev = (deviation / deviationCap).clamp(-1.0, 1.0);
-
-        // Инвертируем: если цена упала (deviation < 0), мы хотим купить больше (adjustment > 0)
         adjustment = -normalizedDev * maxAdjustment;
       }
 
-      double target = basePercentage + adjustment;
+      // Базовый вес + коррекция SMA
+      double weight = (100.0 / stockCount) + adjustment;
 
-      // Защита от отрицательных или нулевых весов (оставляем минимум 0.5%)
-      target = target.clamp(0.5, basePercentage + maxAdjustment + 1.0);
+      // Защита от отрицательных весов
+      weight = weight.clamp(0.1, 100.0);
 
-      rawWeights.add(target);
-
-      print(
-        '${stock.shortName}: откл ${deviation.toStringAsFixed(1)}% -> коррекция ${adjustment.toStringAsFixed(2)}% -> цель ${target.toStringAsFixed(2)}%',
-      );
+      baseWeights.add(weight);
+      activeWeightSum += weight;
     }
 
-    // Нормализация суммы ровно до 100%
+    // 2. Нормализация с учетом исключенных
+    // Сумма весов "активных" акций должна стать 100%
+    if (activeWeightSum > 0) {
+      for (int i = 0; i < baseWeights.length; i++) {
+        if (!excludedIndices.contains(i)) {
+          // Пропорционально увеличиваем веса оставшихся акций
+          rawWeights.add((baseWeights[i] / activeWeightSum) * 100.0);
+        } else {
+          rawWeights.add(0.0);
+        }
+      }
+    } else {
+      // Если все исключены (маловерноятно), возвращаем нули
+      return List.filled(stockCount, 0.0);
+    }
+
+    // 3. Финальная нормализация до 100% (для устранения ошибок округления)
     List<double> normalized = _normalizeToSum(rawWeights, 100.0);
 
     _cachedTargetPercentages = normalized;
+    _cachedExcludedIndices = excludedIndices;
+
+    print('Исключено акций: ${excludedIndices.length}');
+    print('Итоговые доли:');
+    for (int i = 0; i < _stocks.length; i++) {
+      print('${_stocks[i].shortName}: ${normalized[i].toStringAsFixed(2)}%');
+    }
+
     return normalized;
   }
 
   List<double> _normalizeToSum(List<double> weights, double targetSum) {
     final int count = weights.length;
     double currentSum = weights.fold(0.0, (a, b) => a + b);
+    if (currentSum.abs() < 0.0001) return List.filled(count, 0.0);
 
-    if (currentSum.abs() < 0.0001) {
-      return List.filled(count, targetSum / count);
-    }
-
-    // Пропорциональное масштабирование
     double factor = targetSum / currentSum;
     List<double> normalized = weights.map((w) => w * factor).toList();
 
-    // Округление и корректировка остатка
     List<double> result = normalized
         .map((w) => double.parse(w.toStringAsFixed(1)))
         .toList();
     double roundedSum = result.fold(0.0, (a, b) => a + b);
     double diff = targetSum - roundedSum;
 
-    // Распределяем разницу (0.1 или -0.1) по элементам с наибольшей дробной частью
     if (diff.abs() > 0.001) {
-      // Создаем список индексов, сортированных по тому, насколько сильно "обрезало" округление
       var indices = List.generate(count, (i) => i);
       indices.sort((a, b) {
         double fracA = normalized[a] - result[a];
         double fracB = normalized[b] - result[b];
-        // Если нужно добавить (diff > 0), берем тех, у кого дробная часть больше
-        // Если нужно убавить (diff < 0), берем тех, у кого дробная часть меньше (или отрицательная)
         return (diff > 0 ? fracB - fracA : fracA - fracB).toInt();
       });
 
@@ -158,20 +180,13 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
       while (diff.abs() > 0.001 && idx < count) {
         int i = indices[idx];
         double change = diff > 0 ? 0.1 : -0.1;
-        if (result[i] + change > 0) {
-          // Защита от отрицательных значений
+        if (result[i] + change >= 0) {
           result[i] += change;
           diff -= change;
         }
         idx++;
       }
     }
-
-    print('--- НОРМАЛИЗАЦИЯ ---');
-    print(
-      'Сумма итоговая: ${result.fold(0.0, (a, b) => a + b).toStringAsFixed(1)}%',
-    );
-
     return result;
   }
 
@@ -195,6 +210,7 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
     }
 
     _cachedTargetPercentages = null;
+    _cachedExcludedIndices = null;
     final List<double> targetPercentages = _calculateTargetPercentages();
 
     for (int i = 0; i < _stocks.length; i++) {
@@ -209,6 +225,7 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
     setState(() {
       _showAllocation = false;
       _cachedTargetPercentages = null;
+      _cachedExcludedIndices = null;
     });
 
     _showSnackBar('Портфель ребалансирован', Colors.green);
@@ -244,7 +261,9 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
 
     final double totalPortfolioValue = currentPortfolioValue + amount;
     _cachedTargetPercentages = null;
+    _cachedExcludedIndices = null;
     final List<double> targetPercentages = _calculateTargetPercentages();
+    final excludedIndices = _cachedExcludedIndices ?? {};
 
     _allocations = [];
     for (int i = 0; i < _stocks.length; i++) {
@@ -267,13 +286,15 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
       );
     }
 
-    _allocateWithImprovedAlgorithm(
+    // ИСПОЛЬЗУЕМ НОВЫЙ ИТЕРАТИВНЫЙ АЛГОРИТМ
+    _allocateIteratively(
       amount,
       sharePrices,
       targetPercentages,
       currentPortfolioValue,
       totalPortfolioValue,
       existingCosts,
+      excludedIndices,
     );
 
     setState(() {
@@ -281,145 +302,108 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
     });
   }
 
-  void _allocateWithImprovedAlgorithm(
-    double amount,
+  /// НОВЫЙ АЛГОРИТМ: Итеративное распределение
+  /// Покупает лот за лотом, выбирая актив с наибольшим дефицитом до цели
+  void _allocateIteratively(
+    double amountToSpend,
     List<double> sharePrices,
     List<double> targetPercentages,
     double currentPortfolioValue,
     double totalPortfolioValue,
     List<double> existingCosts,
+    Set<int> excludedIndices,
   ) {
-    final List<double> targetAmounts = [];
+    List<int> lotsToBuy = List.filled(_stocks.length, 0);
+    List<double> currentValues = List.from(
+      existingCosts,
+    ); // Текущая стоимость каждого актива
+
+    double spent = 0.0;
+
+    // Предварительный расчет стоимости одного лота
+    List<double> lotCosts = [];
     for (int i = 0; i < _stocks.length; i++) {
-      targetAmounts.add((targetPercentages[i] / 100) * totalPortfolioValue);
+      lotCosts.add(sharePrices[i] * _stocks[i].lotSize);
     }
 
-    final List<Map<String, dynamic>> stockData = [];
-    double totalToSpend = 0;
+    int safetyCounter = 0;
+    const int maxIterations = 10000; // Защита от бесконечного цикла
 
-    for (int i = 0; i < _stocks.length; i++) {
-      final stock = _stocks[i];
-      final double lotCost = sharePrices[i] * stock.lotSize;
-      final double targetAmount = targetAmounts[i];
-      final double existingCost = existingCosts[i];
-      final double neededAmount = targetAmount - existingCost;
+    while (spent < amountToSpend && safetyCounter < maxIterations) {
+      safetyCounter++;
 
-      int lotsToBuy = 0;
-      if (neededAmount > 0) {
-        lotsToBuy = (neededAmount / lotCost).floor();
+      int bestIndex = -1;
+      double maxDeficit = -double.infinity;
+
+      // Ищем актив, которому больше всего "не хватает" до цели с учетом текущего бюджета
+      for (int i = 0; i < _stocks.length; i++) {
+        // Пропускаем исключенные (переоцененные)
+        if (excludedIndices.contains(i)) continue;
+
+        double lotCost = lotCosts[i];
+
+        // Если лот дороже оставшихся денег, пропускаем
+        if (spent + lotCost > amountToSpend + 0.01) continue;
+
+        // Считаем дефицит:
+        // Целевая стоимость - (Текущая стоимость + стоимость одного лота)
+        // Нам нужно найти тот актив, покупка которого даст наибольший вклад в выравнивание портфеля.
+        // Точнее: мы выбираем актив, у которого разница между (Целью) и (Текущим + Лот) самая большая (наибольший недобор).
+
+        double targetValue =
+            (targetPercentages[i] / 100) *
+            (currentPortfolioValue + spent + lotCost);
+
+        // Более простой и надежный эвристический подход:
+        // D = (Target% * TotalPortfolio) - CurrentCost.
+        // Мы хотим купить тот лот, который максимально уменьшит D.
+        // Но поскольку TotalPortfolio растет, пересчитываем D динамически.
+
+        // Текущий прогнозируемый дефицит, если мы купим этот лот
+        double futureTotalPortfolio = currentPortfolioValue + spent + lotCost;
+        double futureTarget =
+            (targetPercentages[i] / 100) * futureTotalPortfolio;
+        double futureCurrent = currentValues[i] + lotCost;
+
+        double deficit = futureTarget - futureCurrent;
+
+        // Если дефицит положительный, значит нам все еще нужно докупать этот актив.
+        // Мы выбираем актив с самым большим дефицитом.
+
+        // Нюанс: Если у актива дефицит отрицательный (мы уже перебрали), мы его не покупаем в приоритете.
+        // Но если у всех дефицит отрицательный (идеальный портфель), мы можем докупить того, у кого он "наименее отрицательный".
+
+        if (deficit > maxDeficit) {
+          maxDeficit = deficit;
+          bestIndex = i;
+        }
       }
 
-      double buyCost = lotsToBuy * lotCost;
+      // Если не нашли подходящий лот (либо все куплено, либо не хватает денег)
+      if (bestIndex == -1) break;
 
-      stockData.add({
-        'index': i,
-        'stock': stock,
-        'lotCost': lotCost,
-        'targetAmount': targetAmount,
-        'existingCost': existingCost,
-        'lotsToBuy': lotsToBuy,
-        'buyCost': buyCost,
-        'deviationAfterBuy': targetAmount - (existingCost + buyCost),
-      });
-
-      totalToSpend += buyCost;
+      // Совершаем покупку
+      double buyLotCost = lotCosts[bestIndex];
+      lotsToBuy[bestIndex]++;
+      currentValues[bestIndex] += buyLotCost;
+      spent += buyLotCost;
     }
 
-    double remainingAmount = amount;
+    print('Аллокация завершена. Потрачено: $spent из $amountToSpend');
 
-    // Если превысили бюджет, урезаем
-    if (totalToSpend > amount) {
-      _reducePurchasesToFitBudget(stockData, amount);
-      totalToSpend = stockData.fold(0.0, (sum, data) => sum + data['buyCost']);
-    }
+    // Сохранение результатов
+    for (int i = 0; i < _stocks.length; i++) {
+      final double buyCost = lotsToBuy[i] * lotCosts[i];
+      final double totalCost = existingCosts[i] + buyCost;
 
-    remainingAmount = amount - totalToSpend;
-
-    // Распределяем остаток
-    if (remainingAmount > 0) {
-      _distributeRemainingBudget(stockData, remainingAmount);
-    }
-
-    // Финальное сохранение результатов
-    for (var data in stockData) {
-      final int index = data['index'];
-      final int lotsToBuy = data['lotsToBuy'];
-      final double buyCost = data['buyCost'];
-      final double totalCost = data['existingCost'] + buyCost;
-
-      _allocations[index] = StockAllocation(
-        stock: _allocations[index].stock,
-        lots: lotsToBuy,
-        existingLots: _allocations[index].existingLots,
+      _allocations[i] = StockAllocation(
+        stock: _allocations[i].stock,
+        lots: lotsToBuy[i],
+        existingLots: _allocations[i].existingLots,
         totalCost: buyCost,
-        percentage: (totalCost / totalPortfolioValue) * 100,
-        existingCost: data['existingCost'],
-        existingPercentage:
-            (data['existingCost'] / currentPortfolioValue * 100),
-      );
-    }
-  }
-
-  void _reducePurchasesToFitBudget(
-    List<Map<String, dynamic>> stockData,
-    double availableBudget,
-  ) {
-    // Сортируем по "важности" покупки: у кого отклонение от цели самое отрицательное (сильный недолет), того режем последним
-    stockData.sort(
-      (a, b) => b['deviationAfterBuy'].compareTo(a['deviationAfterBuy']),
-    );
-
-    double totalSpent = stockData.fold(
-      0.0,
-      (sum, data) => sum + data['buyCost'],
-    );
-
-    while (totalSpent > availableBudget) {
-      bool reduced = false;
-      // Идем с конца (у кого избыток или наименьший дефицит) и урезаем
-      for (int i = stockData.length - 1; i >= 0; i--) {
-        var data = stockData[i];
-        if (data['lotsToBuy'] > 0) {
-          data['lotsToBuy']--;
-          double lotCost = data['lotCost'];
-          data['buyCost'] -= lotCost;
-          data['deviationAfterBuy'] += lotCost;
-          totalSpent -= lotCost;
-          reduced = true;
-
-          if (totalSpent <= availableBudget) break;
-        }
-      }
-      if (!reduced) break;
-    }
-  }
-
-  void _distributeRemainingBudget(
-    List<Map<String, dynamic>> stockData,
-    double remainingAmount,
-  ) {
-    // Сортируем по дефициту: у кого отклонение самое большое (сильный недолет), тому добавляем первым
-    stockData.sort(
-      (a, b) => b['deviationAfterBuy'].compareTo(a['deviationAfterBuy']),
-    );
-
-    bool changed = true;
-    while (remainingAmount > 0 && changed) {
-      changed = false;
-      for (var data in stockData) {
-        double lotCost = data['lotCost'];
-        if (lotCost <= remainingAmount) {
-          data['lotsToBuy']++;
-          data['buyCost'] += lotCost;
-          data['deviationAfterBuy'] -= lotCost;
-          remainingAmount -= lotCost;
-          changed = true;
-          break; // После покупки пересчитываем сортировку, так как приоритеты могли поменяться
-        }
-      }
-      // Обновляем сортировку после прохода
-      stockData.sort(
-        (a, b) => b['deviationAfterBuy'].compareTo(a['deviationAfterBuy']),
+        percentage: (totalCost / (currentPortfolioValue + spent)) * 100,
+        existingCost: existingCosts[i],
+        existingPercentage: (existingCosts[i] / currentPortfolioValue * 100),
       );
     }
   }
@@ -433,6 +417,7 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
   void _onShareChanged(int index) {
     setState(() {
       _cachedTargetPercentages = null;
+      _cachedExcludedIndices = null;
     });
   }
 

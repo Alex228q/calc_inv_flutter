@@ -69,8 +69,8 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
     }
   }
 
-  /// УЛУЧШЕННЫЙ АЛГОРИТМ РАСЧЕТА ЦЕЛЕЙ
-  /// Учитывает исключенные акции и перераспределяет их доли
+  /// ОБНОВЛЕННЫЙ АЛГОРИТМ РАСЧЕТА ЦЕЛЕЙ
+  /// Не исключает акции, а применяет понижающий коэффициент при перекупленности.
   List<double> _calculateTargetPercentages() {
     if (_stocks.isEmpty) return [];
     if (_cachedTargetPercentages != null && _cachedExcludedIndices != null) {
@@ -78,72 +78,79 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
     }
 
     final int stockCount = _stocks.length;
-    const double overvaluationThreshold = 10.0;
 
     print(
-      '\n=== РАСЧЕТ ЦЕЛЕВЫХ ДОЛЕЙ (ПЛАВНАЯ КОРРЕКТИРОВКА + ПЕРЕРАСПРЕДЕЛЕНИЕ) ===',
+      '\n=== РАСЧЕТ ЦЕЛЕВЫХ ДОЛЕЙ (ПЛАВНАЯ КОРРЕКТИРОВКА БЕЗ ИСКЛЮЧЕНИЯ) ===',
     );
 
     // Параметры алгоритма
-    const double maxAdjustment = 3.0;
-    const double deviationCap = 20.0;
+    const double maxAdjustment = 3.0; // Макс коррекция на знак/недооценку
+    const double deviationCap = 20.0; // Нормировка отклонения
+
+    // НОВОЕ: Параметры штрафа за перекупленность
+    const double overvaluationPenaltyRate =
+        0.02; // 2% штрафа за каждый 1% перекупленности
+    // Например, при отклонении +10% вес уменьшится на 20%. При +20% вес уменьшится на 40%.
 
     List<double> rawWeights = [];
-    Set<int> excludedIndices = {};
+    Set<int> excludedIndices =
+        {}; // Оставляем для совместимости с остальным кодом, но оно будет пустым
 
-    // 1. Проход 1: Определяем базовые веса и исключения
-    List<double> baseWeights = [];
-    double activeWeightSum = 0.0;
+    double totalRawWeight = 0.0;
 
     for (int i = 0; i < _stocks.length; i++) {
       final stock = _stocks[i];
       double deviation = stock.deviationFromSma ?? 0;
 
-      // Проверка на переоцененность
-      if (deviation >= overvaluationThreshold) {
-        baseWeights.add(0.0); // Временно 0
-        excludedIndices.add(i);
-        print('${stock.shortName}: ПЕРЕОЦЕНЕНА -> ИСКЛЮЧЕНА');
-        continue;
-      }
+      double weight = 100.0 / stockCount; // Базовый равный вес
 
-      double adjustment = 0;
+      // 1. Корректировка на недооценку/переоценку (стандартная)
       if (deviation != 0) {
         double normalizedDev = (deviation / deviationCap).clamp(-1.0, 1.0);
-        adjustment = -normalizedDev * maxAdjustment;
+        weight += -normalizedDev * maxAdjustment;
       }
 
-      // Базовый вес + коррекция SMA
-      double weight = (100.0 / stockCount) + adjustment;
+      // 2. НОВОЕ: Дополнительный штраф за перекупленность вместо исключения
+      if (deviation > 0) {
+        // Если отклонение положительное (акция дороже SMA), применяем штраф.
+        // deviation - это проценты (например, 10.0).
+        // Штраф умножает вес на (1 - ставка * отклонение).
+        // При отклонении 10% и ставке 0.02: множитель = 1 - 0.2 = 0.8 (вес падает до 80% от текущего).
+        double penaltyMultiplier = 1.0 - (deviation * overvaluationPenaltyRate);
 
-      // Защита от отрицательных весов
+        // Защита от отрицательного множителя (если отклонение огромное)
+        penaltyMultiplier = penaltyMultiplier.clamp(0.1, 1.0);
+
+        weight *= penaltyMultiplier;
+
+        print(
+          '${stock.shortName}: Перекупленность ${(deviation).toStringAsFixed(1)}%, штраф множитель ${penaltyMultiplier.toStringAsFixed(2)}',
+        );
+      }
+
+      // Защита от отрицательных или нулевых весов
       weight = weight.clamp(0.1, 100.0);
 
-      baseWeights.add(weight);
-      activeWeightSum += weight;
+      rawWeights.add(weight);
+      totalRawWeight += weight;
     }
 
-    // 2. Нормализация с учетом исключенных
-    // Сумма весов "активных" акций должна стать 100%
-    if (activeWeightSum > 0) {
-      for (int i = 0; i < baseWeights.length; i++) {
-        if (!excludedIndices.contains(i)) {
-          // Пропорционально увеличиваем веса оставшихся акций
-          rawWeights.add((baseWeights[i] / activeWeightSum) * 100.0);
-        } else {
-          rawWeights.add(0.0);
-        }
+    // 3. Нормализация до 100%
+    // Так как мы не обнуляем веса, а просто уменьшаем, сумма просто нормализуется.
+    List<double> normalized = [];
+    if (totalRawWeight > 0) {
+      for (int i = 0; i < _stocks.length; i++) {
+        normalized.add((rawWeights[i] / totalRawWeight) * 100.0);
       }
     } else {
-      // Если все исключены (маловерноятно), возвращаем нули
-      return List.filled(stockCount, 0.0);
+      return List.filled(stockCount, 100.0 / stockCount);
     }
 
-    // 3. Финальная нормализация до 100% (для устранения ошибок округления)
-    List<double> normalized = _normalizeToSum(rawWeights, 100.0);
+    // 4. Финальная нормализация (для красивых 100.0%)
+    normalized = _normalizeToSum(normalized, 100.0);
 
     _cachedTargetPercentages = normalized;
-    _cachedExcludedIndices = excludedIndices;
+    _cachedExcludedIndices = excludedIndices; // Пустое множество
 
     print('Исключено акций: ${excludedIndices.length}');
     print('Итоговые доли:');
@@ -286,7 +293,7 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
       );
     }
 
-    // ИСПОЛЬЗУЕМ НОВЫЙ ИТЕРАТИВНЫЙ АЛГОРИТМ
+    // ИСПОЛЬЗУЕМ ИТЕРАТИВНЫЙ АЛГОРИТМ
     _allocateIteratively(
       amount,
       sharePrices,
@@ -302,8 +309,7 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
     });
   }
 
-  /// НОВЫЙ АЛГОРИТМ: Итеративное распределение
-  /// Покупает лот за лотом, выбирая актив с наибольшим дефицитом до цели
+  /// АЛГОРИТМ: Итеративное распределение
   void _allocateIteratively(
     double amountToSpend,
     List<double> sharePrices,
@@ -314,20 +320,17 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
     Set<int> excludedIndices,
   ) {
     List<int> lotsToBuy = List.filled(_stocks.length, 0);
-    List<double> currentValues = List.from(
-      existingCosts,
-    ); // Текущая стоимость каждого актива
+    List<double> currentValues = List.from(existingCosts);
 
     double spent = 0.0;
 
-    // Предварительный расчет стоимости одного лота
     List<double> lotCosts = [];
     for (int i = 0; i < _stocks.length; i++) {
       lotCosts.add(sharePrices[i] * _stocks[i].lotSize);
     }
 
     int safetyCounter = 0;
-    const int maxIterations = 10000; // Защита от бесконечного цикла
+    const int maxIterations = 10000;
 
     while (spent < amountToSpend && safetyCounter < maxIterations) {
       safetyCounter++;
@@ -335,31 +338,15 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
       int bestIndex = -1;
       double maxDeficit = -double.infinity;
 
-      // Ищем актив, которому больше всего "не хватает" до цели с учетом текущего бюджета
       for (int i = 0; i < _stocks.length; i++) {
-        // Пропускаем исключенные (переоцененные)
+        // Здесь excludedIndices будет пустым (так как мы убрали логику исключения),
+        // но проверка оставлена для надежности.
         if (excludedIndices.contains(i)) continue;
 
         double lotCost = lotCosts[i];
 
-        // Если лот дороже оставшихся денег, пропускаем
         if (spent + lotCost > amountToSpend + 0.01) continue;
 
-        // Считаем дефицит:
-        // Целевая стоимость - (Текущая стоимость + стоимость одного лота)
-        // Нам нужно найти тот актив, покупка которого даст наибольший вклад в выравнивание портфеля.
-        // Точнее: мы выбираем актив, у которого разница между (Целью) и (Текущим + Лот) самая большая (наибольший недобор).
-
-        double targetValue =
-            (targetPercentages[i] / 100) *
-            (currentPortfolioValue + spent + lotCost);
-
-        // Более простой и надежный эвристический подход:
-        // D = (Target% * TotalPortfolio) - CurrentCost.
-        // Мы хотим купить тот лот, который максимально уменьшит D.
-        // Но поскольку TotalPortfolio растет, пересчитываем D динамически.
-
-        // Текущий прогнозируемый дефицит, если мы купим этот лот
         double futureTotalPortfolio = currentPortfolioValue + spent + lotCost;
         double futureTarget =
             (targetPercentages[i] / 100) * futureTotalPortfolio;
@@ -367,22 +354,14 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
 
         double deficit = futureTarget - futureCurrent;
 
-        // Если дефицит положительный, значит нам все еще нужно докупать этот актив.
-        // Мы выбираем актив с самым большим дефицитом.
-
-        // Нюанс: Если у актива дефицит отрицательный (мы уже перебрали), мы его не покупаем в приоритете.
-        // Но если у всех дефицит отрицательный (идеальный портфель), мы можем докупить того, у кого он "наименее отрицательный".
-
         if (deficit > maxDeficit) {
           maxDeficit = deficit;
           bestIndex = i;
         }
       }
 
-      // Если не нашли подходящий лот (либо все куплено, либо не хватает денег)
       if (bestIndex == -1) break;
 
-      // Совершаем покупку
       double buyLotCost = lotCosts[bestIndex];
       lotsToBuy[bestIndex]++;
       currentValues[bestIndex] += buyLotCost;
@@ -391,7 +370,6 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
 
     print('Аллокация завершена. Потрачено: $spent из $amountToSpend');
 
-    // Сохранение результатов
     for (int i = 0; i < _stocks.length; i++) {
       final double buyCost = lotsToBuy[i] * lotCosts[i];
       final double totalCost = existingCosts[i] + buyCost;

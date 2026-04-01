@@ -23,7 +23,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/icons/X5.png
-    - assets/icons/MDMG.png
+    - assets/icons/MOEX.png
     - assets/icons/NVTK.png
     - assets/icons/GMKN.png
     - assets/icons/PLZL.png

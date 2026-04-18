@@ -41,35 +41,6 @@ class AdaptiveStocksGrid extends StatelessWidget {
                 Row(
                   children: [
                     Chip(
-                      backgroundColor: stocksWithSma > 0
-                          ? Colors.green.withOpacity(0.1)
-                          : Colors.grey.withOpacity(0.1),
-                      label: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.trending_up,
-                            size: 14,
-                            color: stocksWithSma > 0
-                                ? Colors.green
-                                : Colors.grey,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            'SMA: $stocksWithSma/${stocks.length}',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: stocksWithSma > 0
-                                  ? Colors.green
-                                  : Colors.grey,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Chip(
                       backgroundColor: theme.colorScheme.primary.withOpacity(
                         0.1,
                       ),
@@ -170,18 +141,6 @@ class AdaptiveStocksGrid extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(width: 16),
-              SizedBox(
-                width: 120, // Увеличили ширину для рейтинга
-                child: Text(
-                  'SMA200 / Рейтинг',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 12,
-                    color: Colors.grey,
-                  ),
-                ),
-              ),
             ],
           ),
         ),
@@ -248,26 +207,13 @@ class AdaptiveStocksGrid extends StatelessWidget {
                   // Цена
                   SizedBox(
                     width: 70,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '${stock.lastPrice.toStringAsFixed(2)} ₽',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: theme.colorScheme.primary,
-                          ),
-                        ),
-                        if (stock.sma200 != null)
-                          Text(
-                            'SMA: ${stock.sma200!.toStringAsFixed(2)}',
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                      ],
+                    child: Text(
+                      '${stock.lastPrice.toStringAsFixed(2)} ₽',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: theme.colorScheme.primary,
+                      ),
                     ),
                   ),
 
@@ -287,123 +233,6 @@ class AdaptiveStocksGrid extends StatelessWidget {
                             color: theme.colorScheme.onSurface,
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(width: 16),
-
-                  // Информация о SMA и РЕЙТИНГ (ДОБАВЛЕНО)
-                  SizedBox(
-                    width: 140,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (stock.deviationFromSma != null) ...[
-                          // Процент отклонения
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: stock.deviationFromSma! > 0
-                                  ? Colors.red[50]
-                                  : Colors.green[50],
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
-                                color: stock.deviationFromSma! > 0
-                                    ? Colors.red[200]!
-                                    : Colors.green[200]!,
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  stock.deviationFromSma! > 0
-                                      ? Icons.trending_up
-                                      : Icons.trending_down,
-                                  size: 12,
-                                  color: stock.deviationFromSma! > 0
-                                      ? Colors.red[700]
-                                      : Colors.green[700],
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  '${stock.deviationFromSma!.toStringAsFixed(1)}%',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: stock.deviationFromSma! > 0
-                                        ? Colors.red[700]
-                                        : Colors.green[700],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-
-                          const SizedBox(height: 4),
-
-                          // Текстовый рейтинг (ДОБАВЛЕНО)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: getRatingColor(
-                                stock.deviationFromSma,
-                              ).withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(4),
-                              border: Border.all(
-                                color: getRatingColor(
-                                  stock.deviationFromSma,
-                                ).withOpacity(0.3),
-                              ),
-                            ),
-                            child: Text(
-                              getRating(stock.deviationFromSma),
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w500,
-                                color: getRatingColor(stock.deviationFromSma),
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ] else
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.grey[100],
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: Colors.grey[300]!),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.timer_off,
-                                  size: 12,
-                                  color: Colors.grey[500],
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  'Нет данных',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: Colors.grey[600],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
                       ],
                     ),
                   ),

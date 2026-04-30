@@ -14,6 +14,7 @@ class StockService {
     {'ticker': 'OZON', 'name': 'OZON', 'lotSize': '1'},
     {'ticker': 'PLZL', 'name': 'Полюс', 'lotSize': '1'},
     {'ticker': 'SBERP', 'name': 'Сбербанк', 'lotSize': '1'},
+    {'ticker': 'CHMF', 'name': 'Северсталь', 'lotSize': '1'},
     {'ticker': 'TATNP', 'name': 'Татнефть', 'lotSize': '1'},
     {'ticker': 'TRNFP', 'name': 'Транснефть', 'lotSize': '1'},
     {'ticker': 'PHOR', 'name': 'Фосагро', 'lotSize': '1'},

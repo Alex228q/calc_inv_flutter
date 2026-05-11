@@ -63,36 +63,43 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
     }
   }
 
-  /// УПРОЩЕННЫЙ АЛГОРИТМ: РАВНЫЕ ДОЛИ
-  /// Целевая доля = 100% / количество акций.
+  /// АЛГОРИТМ: фиксированные доли — SBER 7.18%, остальные 7.14%
   List<double> _calculateTargetPercentages() {
     if (_stocks.isEmpty) return [];
 
-    // Если уже считали, возвращаем кэш
     if (_cachedTargetPercentages != null) {
       return _cachedTargetPercentages!;
     }
 
     final int stockCount = _stocks.length;
-    print('\n=== РАСЧЕТ ЦЕЛЕВЫХ ДОЛЕЙ (СТРАТЕГИЯ РАВНЫХ ДОЛЕЙ) ===');
+    print('\n=== РАСЧЕТ ЦЕЛЕВЫХ ДОЛЕЙ (SBER 7.18%, остальные 7.14%) ===');
 
-    // Простой расчет: делим 100% на все акции поровну
-    double equalWeight = 100.0 / stockCount;
+    const double sberTarget = 7.18;
+    const double otherTarget = 7.14;
 
-    List<double> targets = List.filled(stockCount, equalWeight);
+    List<double> targets = List.filled(stockCount, otherTarget);
 
-    // Небольшая корректировка, чтобы сумма ровно 100.0% (избежать ошибок округления)
+    for (int i = 0; i < _stocks.length; i++) {
+      if (_stocks[i].secId == 'SBERP') {
+        targets[i] = sberTarget;
+        break;
+      }
+    }
+
+    // Сумма уже ровно 100.00, но нормализуем на всякий случай
     targets = _normalizeToSum(targets, 100.0);
 
     _cachedTargetPercentages = targets;
 
     print('Количество акций: $stockCount');
-    print('Целевая доля каждой: ${equalWeight.toStringAsFixed(2)}%');
+    for (int i = 0; i < _stocks.length; i++) {
+      print('${_stocks[i].secId}: ${targets[i].toStringAsFixed(2)}%');
+    }
 
     return targets;
   }
 
-  /// Вспомогательный метод для нормализации суммы до 100.0
+  /// Нормализация с округлением до 2 знаков (было 1)
   List<double> _normalizeToSum(List<double> weights, double targetSum) {
     final int count = weights.length;
     double currentSum = weights.fold(0.0, (a, b) => a + b);
@@ -101,17 +108,26 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
     double factor = targetSum / currentSum;
     List<double> normalized = weights.map((w) => w * factor).toList();
 
-    // Округляем до 1 знака после запятой
+    // Округляем до 2 знаков после запятой (было 1)
     List<double> result = normalized
-        .map((w) => double.parse(w.toStringAsFixed(1)))
+        .map((w) => double.parse(w.toStringAsFixed(2)))
         .toList();
 
     double roundedSum = result.fold(0.0, (a, b) => a + b);
     double diff = targetSum - roundedSum;
 
-    // Исправляем погрешность округления (добавляем/убираем 0.1% первому элементу)
+    // Распределяем погрешность по всем акциям, а не только первой
     if (diff.abs() > 0.001) {
-      if (result.isNotEmpty) result[0] += diff;
+      int idx = 0;
+      double remaining = diff;
+      while (remaining.abs() > 0.005 && idx < count) {
+        double adjustment = remaining > 0 ? 0.01 : -0.01;
+        result[idx] = double.parse(
+          (result[idx] + adjustment).toStringAsFixed(2),
+        );
+        remaining -= adjustment;
+        idx++;
+      }
     }
 
     return result;

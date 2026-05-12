@@ -63,7 +63,7 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
     }
   }
 
-  /// АЛГОРИТМ: фиксированные доли — SBER 7.18%, остальные 7.14%
+  /// АЛГОРИТМ: равное распределение между всеми акциями
   List<double> _calculateTargetPercentages() {
     if (_stocks.isEmpty) return [];
 
@@ -72,21 +72,12 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
     }
 
     final int stockCount = _stocks.length;
-    print('\n=== РАСЧЕТ ЦЕЛЕВЫХ ДОЛЕЙ (SBER 7.18%, остальные 7.14%) ===');
+    print('\n=== РАСЧЕТ ЦЕЛЕВЫХ ДОЛЕЙ (Равное распределение) ===');
 
-    const double sberTarget = 7.18;
-    const double otherTarget = 7.14;
+    final double equalTarget = 100.0 / stockCount;
+    List<double> targets = List.filled(stockCount, equalTarget);
 
-    List<double> targets = List.filled(stockCount, otherTarget);
-
-    for (int i = 0; i < _stocks.length; i++) {
-      if (_stocks[i].secId == 'SBERP') {
-        targets[i] = sberTarget;
-        break;
-      }
-    }
-
-    // Сумма уже ровно 100.00, но нормализуем на всякий случай
+    // Нормализуем, чтобы сумма была ровно 100.00
     targets = _normalizeToSum(targets, 100.0);
 
     _cachedTargetPercentages = targets;

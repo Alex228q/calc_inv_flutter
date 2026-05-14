@@ -63,7 +63,7 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
     }
   }
 
-  /// АЛГОРИТМ: равное распределение между всеми акциями
+  
   /// АЛГОРИТМ: равное распределение между всеми акциями
   List<double> _calculateTargetPercentages() {
     if (_stocks.isEmpty) return [];

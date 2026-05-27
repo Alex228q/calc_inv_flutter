@@ -7,6 +7,7 @@ import '../models/stock.dart';
 class StockService {
   static const List<Map<String, String>> _stocksInfo = [
     {'ticker': 'X5', 'name': 'X5', 'lotSize': '1'},
+    {'ticker': 'MDMG', 'name': 'Мать и дитя', 'lotSize': '1'},
     {'ticker': 'MOEX', 'name': 'Мосбиржа', 'lotSize': '10'},
     {'ticker': 'NVTK', 'name': 'Новатэк', 'lotSize': '1'},
     {'ticker': 'GMKN', 'name': 'Норникель', 'lotSize': '10'},

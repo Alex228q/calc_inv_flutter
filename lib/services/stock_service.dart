@@ -5,23 +5,91 @@ import 'package:http/http.dart' as http;
 import '../models/stock.dart';
 
 class StockService {
-  static const List<Map<String, String>> _stocksInfo = [
-    {'ticker': 'X5', 'name': 'X5', 'lotSize': '1'},
-    {'ticker': 'MDMG', 'name': 'Мать и дитя', 'lotSize': '1'},
-    {'ticker': 'MOEX', 'name': 'Мосбиржа', 'lotSize': '10'},
-    {'ticker': 'NVTK', 'name': 'Новатэк', 'lotSize': '1'},
-    {'ticker': 'OZON', 'name': 'OZON', 'lotSize': '1'},
-    {'ticker': 'PLZL', 'name': 'Полюс', 'lotSize': '1'},
-    {'ticker': 'SBERP', 'name': 'Сбербанк', 'lotSize': '1'},
-    {'ticker': 'TATNP', 'name': 'Татнефть', 'lotSize': '1'},
-    {'ticker': 'PHOR', 'name': 'Фосагро', 'lotSize': '1'},
-    {'ticker': 'YDEX', 'name': 'Yandex', 'lotSize': '1'},
+  static const List<Map<String, dynamic>> _stocksInfo = [
+    {'ticker': 'X5', 'name': 'X5', 'lotSize': '1', 'targetPercentage': 4.5},
+    {
+      'ticker': 'MDMG',
+      'name': 'Мать и дитя',
+      'lotSize': '1',
+      'targetPercentage': 7.0,
+    },
+    {
+      'ticker': 'MOEX',
+      'name': 'Мосбиржа',
+      'lotSize': '10',
+      'targetPercentage': 9.0,
+    },
+    {
+      'ticker': 'NVTK',
+      'name': 'Новатэк',
+      'lotSize': '1',
+      'targetPercentage': 10.0,
+    },
+    {'ticker': 'OZON', 'name': 'OZON', 'lotSize': '1', 'targetPercentage': 4.5},
+    {
+      'ticker': 'PLZL',
+      'name': 'Полюс',
+      'lotSize': '1',
+      'targetPercentage': 7.0,
+    },
+    {
+      'ticker': 'SBERP',
+      'name': 'Сбербанк',
+      'lotSize': '1',
+      'targetPercentage': 15.0,
+    },
+    {
+      'ticker': 'TATNP',
+      'name': 'Татнефть',
+      'lotSize': '1',
+      'targetPercentage': 10.0,
+    },
+    {
+      'ticker': 'PHOR',
+      'name': 'Фосагро',
+      'lotSize': '1',
+      'targetPercentage': 9.0,
+    },
+    {
+      'ticker': 'YDEX',
+      'name': 'Yandex',
+      'lotSize': '1',
+      'targetPercentage': 10.0,
+    },
+    {
+      'ticker': 'GMKN',
+      'name': 'Норникель',
+      'lotSize': '10',
+      'targetPercentage': 7.0,
+    },
+    {
+      'ticker': 'CHMF',
+      'name': 'Северсталь',
+      'lotSize': '1',
+      'targetPercentage': 7.0,
+    },
   ];
+
+  // Метод для получения целевых процентов
+  static List<double> getTargetPercentages() {
+    double sum = 0;
+    for (var stock in _stocksInfo) {
+      sum += (stock['targetPercentage'] as double);
+    }
+
+    // Нормализуем, чтобы сумма была 100%
+    List<double> percentages = [];
+    for (var stock in _stocksInfo) {
+      double normalized = (stock['targetPercentage'] as double) / sum * 100;
+      percentages.add(double.parse(normalized.toStringAsFixed(2)));
+    }
+
+    return percentages;
+  }
 
   Future<List<Stock>> fetchStockPrices() async {
     final List<Stock> loadedStocks = [];
 
-    // Используем параллельную загрузку для повышения производительности
     final List<Future<Stock?>> futures = [];
 
     for (var stockInfo in _stocksInfo) {
@@ -48,14 +116,11 @@ class StockService {
     String name,
   ) async {
     try {
-      // Сначала получаем текущую цену
       final price = await _fetchStockPrice(ticker);
       if (price == null) return null;
 
-      // Параллельно получаем SMA данные
       final smaFuture = _fetchSma200(ticker, price);
 
-      // Ждем SMA или используем таймаут
       Map<String, double>? smaResult;
       try {
         smaResult = await smaFuture.timeout(const Duration(seconds: 10));
@@ -81,7 +146,6 @@ class StockService {
       );
     } catch (e) {
       print('Ошибка при загрузке данных для $ticker: $e');
-      // В случае ошибки возвращаем stock без SMA данных
       final price = await _fetchStockPrice(ticker);
       if (price == null) return null;
 
@@ -113,7 +177,6 @@ class StockService {
 
         double? currentPrice;
 
-        // Пробуем получить из marketdata
         if (data['marketdata'] != null && data['marketdata']['data'] != null) {
           final marketData = data['marketdata']['data'];
           if (marketData.isNotEmpty && marketData[0].isNotEmpty) {
@@ -123,7 +186,6 @@ class StockService {
           }
         }
 
-        // Если не получили из marketdata, пробуем из securities
         if (currentPrice == null || currentPrice == 0) {
           if (data['securities'] != null &&
               data['securities']['data'] != null) {
@@ -158,9 +220,7 @@ class StockService {
       print('Начинаем расчет SMA200 для $ticker...');
 
       final endDate = DateTime.now();
-      final startDate = endDate.subtract(
-        const Duration(days: 400),
-      ); // Берем больше дней для надежности
+      final startDate = endDate.subtract(const Duration(days: 400));
 
       final url = Uri.parse(
         'https://iss.moex.com/iss/engines/stock/markets/shares/securities/$ticker/candles.json',
@@ -182,22 +242,12 @@ class StockService {
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);
 
-        // Отладка структуры данных
-        print('$ticker - получены данные свечей');
-        if (data.containsKey('candles')) {
-          print('$ticker - есть ключ candles');
-          if (data['candles'] != null && data['candles'].containsKey('data')) {
-            print('$ticker - candles.data существует');
-          }
-        }
-
         if (data['candles'] != null && data['candles']['data'] != null) {
           final List<dynamic> candlesData = data['candles']['data'];
           final List<String> columns = List<String>.from(
             data['candles']['columns'],
           );
 
-          print('$ticker - колонки: $columns');
           print('$ticker - количество свечей: ${candlesData.length}');
 
           if (candlesData.isEmpty) {
@@ -205,14 +255,10 @@ class StockService {
             return null;
           }
 
-          // Ищем индекс цены закрытия
           int closeIndex = columns.indexOf('close');
           if (closeIndex == -1) closeIndex = columns.indexOf('CLOSE');
-          if (closeIndex == -1) closeIndex = 4; // По умолчанию 4-я колонка
+          if (closeIndex == -1) closeIndex = 4;
 
-          print('$ticker - индекс цены закрытия: $closeIndex');
-
-          // Извлекаем цены закрытия
           final List<double> closes = [];
           for (var candle in candlesData) {
             if (candle is List && candle.length > closeIndex) {
@@ -235,7 +281,6 @@ class StockService {
             return null;
           }
 
-          // Рассчитываем SMA200 по последним 200 значениям
           double sum = 0;
           final startIndex = max(0, closes.length - 200);
           final endIndex = closes.length;
@@ -271,5 +316,5 @@ class StockService {
     return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
   }
 
-  static List<Map<String, String>> get stocksInfo => _stocksInfo;
+  static List<Map<String, dynamic>> get stocksInfo => _stocksInfo;
 }

@@ -24,13 +24,12 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
   bool _showAllocation = false;
   bool _isLoadingSma = false;
 
-  // Кэш больше не нужен для сложных расчетов, но оставим для хранения простой цели
+  // Кэш для целевых процентов
   List<double>? _cachedTargetPercentages;
 
   @override
   void initState() {
     super.initState();
-    // Инициализация контроллеров для ввода существующих акций
     for (int i = 0; i < StockService.stocksInfo.length; i++) {
       _existingSharesControllers.add(TextEditingController(text: ''));
     }
@@ -40,7 +39,7 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
   Future<void> _fetchStockPrices() async {
     setState(() {
       _isLoading = true;
-      _isLoadingSma = true; // Загружаем SMA просто для отображения на карточках
+      _isLoadingSma = true;
       _error = '';
       _showAllocation = false;
       _cachedTargetPercentages = null;
@@ -63,8 +62,7 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
     }
   }
 
-  
-  /// АЛГОРИТМ: равное распределение между всеми акциями
+  /// Получение целевых процентов из StockService
   List<double> _calculateTargetPercentages() {
     if (_stocks.isEmpty) return [];
 
@@ -72,57 +70,17 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
       return _cachedTargetPercentages!;
     }
 
-    final int stockCount = _stocks.length;
-    print('\n=== РАСЧЕТ ЦЕЛЕВЫХ ДОЛЕЙ (Равное распределение) ===');
+    print('\n=== РАСЧЕТ ЦЕЛЕВЫХ ДОЛЕЙ (Индивидуальное распределение) ===');
 
-    final double equalTarget = 100.0 / stockCount;
-    List<double> targets = List.filled(stockCount, equalTarget);
+    final List<double> targets = StockService.getTargetPercentages();
 
-    // Нормализуем, чтобы сумма была ровно 100.00
-    targets = _normalizeToSum(targets, 100.0);
-
-    _cachedTargetPercentages = targets;
-
-    print('Количество акций: $stockCount');
-    for (int i = 0; i < _stocks.length; i++) {
+    print('Целевые доли:');
+    for (int i = 0; i < _stocks.length && i < targets.length; i++) {
       print('${_stocks[i].secId}: ${targets[i].toStringAsFixed(2)}%');
     }
 
+    _cachedTargetPercentages = targets;
     return targets;
-  }
-
-  /// Нормализация с округлением до 2 знаков (было 1)
-  List<double> _normalizeToSum(List<double> weights, double targetSum) {
-    final int count = weights.length;
-    double currentSum = weights.fold(0.0, (a, b) => a + b);
-    if (currentSum.abs() < 0.0001) return List.filled(count, 0.0);
-
-    double factor = targetSum / currentSum;
-    List<double> normalized = weights.map((w) => w * factor).toList();
-
-    // Округляем до 2 знаков после запятой (было 1)
-    List<double> result = normalized
-        .map((w) => double.parse(w.toStringAsFixed(2)))
-        .toList();
-
-    double roundedSum = result.fold(0.0, (a, b) => a + b);
-    double diff = targetSum - roundedSum;
-
-    // Распределяем погрешность по всем акциям, а не только первой
-    if (diff.abs() > 0.001) {
-      int idx = 0;
-      double remaining = diff;
-      while (remaining.abs() > 0.005 && idx < count) {
-        double adjustment = remaining > 0 ? 0.01 : -0.01;
-        result[idx] = double.parse(
-          (result[idx] + adjustment).toStringAsFixed(2),
-        );
-        remaining -= adjustment;
-        idx++;
-      }
-    }
-
-    return result;
   }
 
   void _rebalancePortfolio() {
@@ -131,7 +89,6 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
       return;
     }
 
-    // Считаем текущую стоимость портфеля
     double currentPortfolioValue = 0;
     for (int i = 0; i < _stocks.length; i++) {
       final stock = _stocks[i];
@@ -145,17 +102,21 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
       return;
     }
 
-    // Получаем целевые доли (равные)
-    _cachedTargetPercentages = null; // Сбрасываем кэш на всякий случай
+    _cachedTargetPercentages = null;
     final List<double> targetPercentages = _calculateTargetPercentages();
 
-    // Обновляем поля ввода: сколько акций должно быть, чтобы доля была равной
+    // Рассчитываем, сколько акций должно быть для достижения целевых долей
     for (int i = 0; i < _stocks.length; i++) {
       final stock = _stocks[i];
       final double targetValue =
           (targetPercentages[i] / 100) * currentPortfolioValue;
       int targetShares = (targetValue / stock.lastPrice).round();
       targetShares = targetShares < 0 ? 0 : targetShares;
+
+      // Учитываем размер лота
+      int targetLots = (targetShares / stock.lotSize).ceil();
+      targetShares = targetLots * stock.lotSize;
+
       _existingSharesControllers[i].text = targetShares.toString();
     }
 
@@ -164,7 +125,7 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
       _cachedTargetPercentages = null;
     });
 
-    _showSnackBar('Портфель ребалансирован до равных долей', Colors.green);
+    _showSnackBar('Портфель ребалансирован до целевых долей', Colors.green);
   }
 
   void _calculateAllocation() {
@@ -199,7 +160,6 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
     _cachedTargetPercentages = null;
     final List<double> targetPercentages = _calculateTargetPercentages();
 
-    // Подготовка структуры результатов
     _allocations = [];
     for (int i = 0; i < _stocks.length; i++) {
       final stock = _stocks[i];
@@ -221,7 +181,6 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
       );
     }
 
-    // ЗАПУСК ИТЕРАТИВНОГО АЛГОРИТМА (Выравнивание до равной доли)
     _allocateIteratively(
       amount,
       sharePrices,
@@ -236,8 +195,6 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
     });
   }
 
-  /// АЛГОРИТМ: Выравнивание долей
-  /// Покупаем лот той акции, у которой текущая доля сильнее всего отстает от целевой (8.33%)
   void _allocateIteratively(
     double amountToSpend,
     List<double> sharePrices,
@@ -251,7 +208,6 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
 
     double spent = 0.0;
 
-    // Стоимость одного лота для каждой акции
     List<double> lotCosts = [];
     for (int i = 0; i < _stocks.length; i++) {
       lotCosts.add(sharePrices[i] * _stocks[i].lotSize);
@@ -269,17 +225,13 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
       for (int i = 0; i < _stocks.length; i++) {
         double lotCost = lotCosts[i];
 
-        // Если не хватает денег даже на 1 лот, пропускаем
         if (spent + lotCost > amountToSpend + 0.01) continue;
 
-        // Считаем, какой будет доля акции, если мы купим этот лот
         double futureTotalPortfolio = currentPortfolioValue + spent + lotCost;
         double futureTarget =
             (targetPercentages[i] / 100) * futureTotalPortfolio;
         double futureCurrent = currentValues[i] + lotCost;
 
-        // Дефицит: насколько текущая доля меньше целевой
-        // (Чем меньше futureCurrent по сравнению с futureTarget, тем выше дефицит)
         double deficit = futureTarget - futureCurrent;
 
         if (deficit > maxDeficit) {
@@ -288,10 +240,8 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
         }
       }
 
-      // Если не нашли, что купить (деньги закончились или дефицита нет), выходим
       if (bestIndex == -1) break;
 
-      // Покупаем лот
       double buyLotCost = lotCosts[bestIndex];
       lotsToBuy[bestIndex]++;
       currentValues[bestIndex] += buyLotCost;
@@ -300,7 +250,6 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
 
     print('Аллокация завершена. Потрачено: $spent из $amountToSpend');
 
-    // Записываем результаты
     for (int i = 0; i < _stocks.length; i++) {
       final double buyCost = lotsToBuy[i] * lotCosts[i];
       final double totalCost = existingCosts[i] + buyCost;
@@ -335,7 +284,7 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Покупка акций (Равные доли)'),
+        title: const Text('Покупка акций (Индивидуальные доли)'),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -424,7 +373,6 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
                               0.0,
                               (sum, a) => sum + a.totalCost,
                             ),
-                        // Передаем false, чтобы виджет не пытался применять логику SMA
                         useSmaAdjustment: false,
                         targetPercentages: currentTargets,
                       ),

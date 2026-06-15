@@ -284,7 +284,7 @@ class _StockPriceScreenState extends State<StockPriceScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Покупка акций (Индивидуальные доли)'),
+        title: const Text('Индивидуальные доли'),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),

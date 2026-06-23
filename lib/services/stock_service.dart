@@ -6,13 +6,8 @@ import '../models/stock.dart';
 
 class StockService {
   static const List<Map<String, dynamic>> _stocksInfo = [
-    {"ticker": "X5", "name": "X5", "lotSize": "1", "targetPercentage": 10.0},
-    {
-      "ticker": "MDMG",
-      "name": "Мать и дитя",
-      "lotSize": "1",
-      "targetPercentage": 10.0,
-    },
+    {"ticker": "X5", "name": "X5", "lotSize": "1", "targetPercentage": 14.0},
+
     {
       "ticker": "MOEX",
       "name": "Мосбиржа",
@@ -21,46 +16,35 @@ class StockService {
     },
 
     {
-      "ticker": "NVTK",
-      "name": "Новатэк",
-      "lotSize": "1",
-      "targetPercentage": 10.0,
-    },
-    {
       "ticker": "OZON",
       "name": "OZON",
       "lotSize": "1",
-      "targetPercentage": 10.0,
+      "targetPercentage": 15.0,
     },
     {
       "ticker": "PLZL",
       "name": "Полюс",
       "lotSize": "1",
-      "targetPercentage": 10.0,
+      "targetPercentage": 14.0,
     },
     {
       "ticker": "SBERP",
       "name": "Сбербанк",
       "lotSize": "1",
-      "targetPercentage": 10.0,
+      "targetPercentage": 16.0,
     },
     {
       "ticker": "TATNP",
       "name": "Татнефть",
       "lotSize": "1",
-      "targetPercentage": 10.0,
+      "targetPercentage": 14.0,
     },
-    {
-      "ticker": "PHOR",
-      "name": "Фосагро",
-      "lotSize": "1",
-      "targetPercentage": 10.0,
-    },
+
     {
       "ticker": "YDEX",
       "name": "Yandex",
       "lotSize": "1",
-      "targetPercentage": 10.0,
+      "targetPercentage": 17.0,
     },
   ];
 
@@ -157,7 +141,7 @@ class StockService {
   Future<double?> _fetchStockPrice(String ticker) async {
     try {
       final priceUrl = Uri.parse(
-        'https://iss.moex.com/iss/engines/stock/markets/shares/boards/TQBR/securities/$ticker.json?'
+        'http://iss.moex.com/iss/engines/stock/markets/shares/boards/TQBR/securities/$ticker.json?'
         'iss.meta=off&'
         'securities.columns=SECID,SECNAME,PREVPRICE&'
         'marketdata.columns=LAST',
@@ -217,7 +201,7 @@ class StockService {
       final startDate = endDate.subtract(const Duration(days: 400));
 
       final url = Uri.parse(
-        'https://iss.moex.com/iss/engines/stock/markets/shares/securities/$ticker/candles.json',
+        'http://iss.moex.com/iss/engines/stock/markets/shares/securities/$ticker/candles.json',
       );
 
       final params = {

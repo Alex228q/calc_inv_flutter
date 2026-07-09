@@ -26,25 +26,20 @@ class StockService {
       "lotSize": "1",
       "targetPercentage": 10.0,
     },
-    {
-      "ticker": "GMKN",
-      "name": "Норникель",
-      "lotSize": "10",
-      "targetPercentage": 10.0,
-    },
+   
 
-    {"ticker": "OZON", "name": "OZON", "lotSize": "1", "targetPercentage": 10.0},
+    {"ticker": "OZON", "name": "OZON", "lotSize": "1", "targetPercentage": 12.5},
     {
       "ticker": "PLZL",
       "name": "Полюс",
       "lotSize": "1",
-      "targetPercentage": 10.0,
+      "targetPercentage": 12.5,
     },
     {
       "ticker": "SBERP",
       "name": "Сбербанк",
       "lotSize": "1",
-      "targetPercentage": 10.0,
+      "targetPercentage": 12.5,
     },
   
 
@@ -62,7 +57,7 @@ class StockService {
       "ticker": "YDEX",
       "name": "Yandex",
       "lotSize": "1",
-      "targetPercentage": 10.0,
+      "targetPercentage": 12.5,
     },
   ];
 

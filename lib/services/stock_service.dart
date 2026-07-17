@@ -8,6 +8,12 @@ class StockService {
   static const List<Map<String, dynamic>> _stocksInfo = [
     {"ticker": "X5", "name": "Икс 5", "lotSize": "1", "targetPercentage": 12.5},
     {
+      "ticker": "MDMG",
+      "name": "Мать и дитя",
+      "lotSize": "1",
+      "targetPercentage": 12.5,
+    },
+    {
       "ticker": "MOEX",
       "name": "Мосбиржа",
       "lotSize": "10",
@@ -18,34 +24,34 @@ class StockService {
       "ticker": "NVTK",
       "name": "Новатэк",
       "lotSize": "1",
-      "targetPercentage": 15.0,
+      "targetPercentage": 12.5,
     },
 
     {
       "ticker": "PLZL",
       "name": "Полюс",
       "lotSize": "1",
-      "targetPercentage": 15.0,
+      "targetPercentage": 12.5,
     },
     {
       "ticker": "SBERP",
       "name": "Сбербанк",
       "lotSize": "1",
-      "targetPercentage": 15.0,
+      "targetPercentage": 12.5,
     },
 
     {
       "ticker": "TATNP",
       "name": "Татнефть",
       "lotSize": "1",
-      "targetPercentage": 15.0,
+      "targetPercentage": 12.5,
     },
 
     {
       "ticker": "YDEX",
       "name": "Yandex",
       "lotSize": "1",
-      "targetPercentage": 15.0,
+      "targetPercentage": 12.5,
     },
   ];
 

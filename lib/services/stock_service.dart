@@ -7,6 +7,12 @@ import '../models/stock.dart';
 class StockService {
   static const List<Map<String, dynamic>> _stocksInfo = [
     {"ticker": "X5", "name": "Икс 5", "lotSize": "1", "targetPercentage": 20.0},
+    {
+      "ticker": "NVTK",
+      "name": "Новатэк",
+      "lotSize": "1",
+      "targetPercentage": 20.0,
+    },
 
     {
       "ticker": "PLZL",
@@ -17,13 +23,6 @@ class StockService {
     {
       "ticker": "SBERP",
       "name": "Сбербанк",
-      "lotSize": "1",
-      "targetPercentage": 20.0,
-    },
-
-    {
-      "ticker": "TATNP",
-      "name": "Татнефть",
       "lotSize": "1",
       "targetPercentage": 20.0,
     },

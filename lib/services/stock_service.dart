@@ -12,13 +12,13 @@ class StockService {
       "ticker": "MOEX",
       "name": "Мосбиржа",
       "lotSize": "10",
-      "targetPercentage": 12.0,
+      "targetPercentage": 10.0,
     },
     {
       "ticker": "NVTK",
       "name": "Новатэк",
       "lotSize": "1",
-      "targetPercentage": 10.0,
+      "targetPercentage": 12.5,
     },
 
     {
@@ -31,27 +31,27 @@ class StockService {
       "ticker": "PLZL",
       "name": "Полюс",
       "lotSize": "1",
-      "targetPercentage": 10.0,
+      "targetPercentage": 12.5,
     },
     {
       "ticker": "SBERP",
       "name": "Сбербанк",
       "lotSize": "1",
-      "targetPercentage": 18.0,
+      "targetPercentage": 15.0,
     },
 
     {
       "ticker": "TATNP",
       "name": "Татнефть",
       "lotSize": "1",
-      "targetPercentage": 13.0,
+      "targetPercentage": 15.0,
     },
 
     {
       "ticker": "YDEX",
       "name": "Yandex",
       "lotSize": "1",
-      "targetPercentage": 17.0,
+      "targetPercentage": 15.0,
     },
   ];
 

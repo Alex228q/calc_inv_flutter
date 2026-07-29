@@ -6,52 +6,52 @@ import '../models/stock.dart';
 
 class StockService {
   static const List<Map<String, dynamic>> _stocksInfo = [
-    {"ticker": "X5", "name": "Икс 5", "lotSize": "1", "targetPercentage": 12.5},
-
+    {"ticker": "X5", "name": "Икс 5", "lotSize": "1", "targetPercentage": 10},
+    {
+      "ticker": "MDMG",
+      "name": "Мать и дитя",
+      "lotSize": "1",
+      "targetPercentage": 10,
+    },
     {
       "ticker": "MOEX",
       "name": "Мосбиржа",
       "lotSize": "10",
-      "targetPercentage": 12.5,
+      "targetPercentage": 10,
     },
     {
       "ticker": "NVTK",
       "name": "Новатэк",
       "lotSize": "1",
-      "targetPercentage": 12.5,
+      "targetPercentage": 10,
     },
 
-    {
-      "ticker": "OZON",
-      "name": "OZON",
-      "lotSize": "1",
-      "targetPercentage": 12.5,
-    },
-    {
-      "ticker": "PLZL",
-      "name": "Полюс",
-      "lotSize": "1",
-      "targetPercentage": 12.5,
-    },
+    {"ticker": "OZON", "name": "OZON", "lotSize": "1", "targetPercentage": 10},
+    {"ticker": "PLZL", "name": "Полюс", "lotSize": "1", "targetPercentage": 10},
     {
       "ticker": "SBERP",
       "name": "Сбербанк",
       "lotSize": "1",
-      "targetPercentage": 12.5,
+      "targetPercentage": 10,
     },
 
     {
       "ticker": "TATNP",
       "name": "Татнефть",
       "lotSize": "1",
-      "targetPercentage": 12.5,
+      "targetPercentage": 10,
     },
-
+    {
+      "ticker": "PHOR",
+      "name": "Фосагро",
+      "lotSize": "1",
+      "targetPercentage": 10,
+    },
     {
       "ticker": "YDEX",
       "name": "Yandex",
       "lotSize": "1",
-      "targetPercentage": 12.5,
+      "targetPercentage": 10,
     },
   ];
 
@@ -59,13 +59,14 @@ class StockService {
   static List<double> getTargetPercentages() {
     double sum = 0;
     for (var stock in _stocksInfo) {
-      sum += (stock['targetPercentage'] as double);
+      // Безопасно приводим к double, даже если там int
+      sum += (stock['targetPercentage'] as num).toDouble();
     }
 
-    // Нормализуем, чтобы сумма была 100%
     List<double> percentages = [];
     for (var stock in _stocksInfo) {
-      double normalized = (stock['targetPercentage'] as double) / sum * 100;
+      double target = (stock['targetPercentage'] as num).toDouble();
+      double normalized = target / sum * 100;
       percentages.add(double.parse(normalized.toStringAsFixed(2)));
     }
 

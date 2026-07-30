@@ -41,6 +41,12 @@ class _ExistingSharesInputState extends State<ExistingSharesInput> {
     return Colors.red;
   }
 
+  bool _needsRebalancing(double currentPercentage, double targetPercentage) {
+    // Проверяем, превышает ли текущая доля целевую в 1.5 раза
+    if (targetPercentage == 0) return false;
+    return currentPercentage > targetPercentage * 1.5;
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentPortfolioValue = _calculateCurrentPortfolioValue();
@@ -150,27 +156,38 @@ class _ExistingSharesInputState extends State<ExistingSharesInput> {
                       ? (cost / currentPortfolioValue * 100)
                       : 0;
 
+                  final bool needsRebalance = _needsRebalancing(
+                    currentPercentage,
+                    targetPercentage,
+                  );
+
                   return SizedBox(
                     width: 150,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        TextField(
-                          controller: widget.controllers[index],
-                          keyboardType: TextInputType.number,
-                          decoration: InputDecoration(
-                            labelText: stock.shortName,
-                            border: const OutlineInputBorder(),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 16,
+                        Stack(
+                          children: [
+                            TextField(
+                              controller: widget.controllers[index],
+                              keyboardType: TextInputType.number,
+                              decoration: InputDecoration(
+                                labelText: stock.shortName,
+                                border: const OutlineInputBorder(),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 16,
+                                ),
+                              ),
+                              onChanged: (value) {
+                                if (widget.onChanged != null) {
+                                  widget.onChanged!(index);
+                                }
+                              },
                             ),
-                          ),
-                          onChanged: (value) {
-                            if (widget.onChanged != null) {
-                              widget.onChanged!(index);
-                            }
-                          },
+
+                            // Сигнал о необходимости ребалансировки
+                          ],
                         ),
 
                         if (existingShares > 0) ...[
@@ -178,20 +195,53 @@ class _ExistingSharesInputState extends State<ExistingSharesInput> {
                           Container(
                             padding: const EdgeInsets.all(8.0),
                             decoration: BoxDecoration(
-                              color: Colors.grey[50],
+                              color: needsRebalance
+                                  ? Colors.red[50]
+                                  : Colors.grey[50],
                               borderRadius: BorderRadius.circular(8.0),
-                              border: Border.all(color: Colors.grey[300]!),
+                              border: Border.all(
+                                color: needsRebalance
+                                    ? Colors.red[300]!
+                                    : Colors.grey[300]!,
+                              ),
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  '${cost.toStringAsFixed(2)} ₽',
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.green,
-                                    fontWeight: FontWeight.w500,
-                                  ),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      '${cost.toStringAsFixed(2)} ₽',
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.green,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    if (needsRebalance)
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 6,
+                                          vertical: 2,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.red,
+                                          borderRadius: BorderRadius.circular(
+                                            4,
+                                          ),
+                                        ),
+                                        child: const Text(
+                                          '!',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ),
+                                  ],
                                 ),
                                 const SizedBox(height: 6),
                                 Column(
@@ -250,6 +300,17 @@ class _ExistingSharesInputState extends State<ExistingSharesInput> {
                                     ),
                                   ],
                                 ),
+                                if (needsRebalance) ...[
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    '⚠️ Превышение в ${(currentPercentage / targetPercentage).toStringAsFixed(1)}x',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: Colors.red[700],
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
                               ],
                             ),
                           ),

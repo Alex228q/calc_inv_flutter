@@ -52,14 +52,12 @@ class StockService {
       "ticker": "TATNP",
       "name": "Татнефть",
       "lotSize": "1",
-
       "targetPercentage": 9,
     },
     {
       "ticker": "PHOR",
       "name": "Фосагро",
       "lotSize": "1",
-
       "targetPercentage": 8,
     },
     {

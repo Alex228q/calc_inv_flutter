@@ -42,9 +42,9 @@ class _ExistingSharesInputState extends State<ExistingSharesInput> {
   }
 
   bool _needsRebalancing(double currentPercentage, double targetPercentage) {
-    // Проверяем, превышает ли текущая доля целевую в 1.8 раза
+    // Проверяем, превышает ли текущая доля целевую в 1.5 раза
     if (targetPercentage == 0) return false;
-    return currentPercentage > targetPercentage * 1.8;
+    return currentPercentage > targetPercentage * 1.5;
   }
 
   @override

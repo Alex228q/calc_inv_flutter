@@ -6,17 +6,11 @@ import '../models/stock.dart';
 
 class StockService {
   static const List<Map<String, dynamic>> _stocksInfo = [
-    {"ticker": "X5", "name": "Икс 5", "lotSize": "1", "targetPercentage": 10},
+    {"ticker": "X5", "name": "Икс 5", "lotSize": "1", "targetPercentage": 15},
     {
       "ticker": "MDMG",
       "name": "Мать и дитя",
       "lotSize": "1",
-      "targetPercentage": 10,
-    },
-    {
-      "ticker": "MOEX",
-      "name": "Мосбиржа",
-      "lotSize": "10",
       "targetPercentage": 10,
     },
 
@@ -24,36 +18,30 @@ class StockService {
       "ticker": "NVTK",
       "name": "Новатэк",
       "lotSize": "1",
-      "targetPercentage": 10,
+      "targetPercentage": 15,
     },
 
-    {"ticker": "OZON", "name": "OZON", "lotSize": "1", "targetPercentage": 10},
-    {"ticker": "PLZL", "name": "Полюс", "lotSize": "1", "targetPercentage": 10},
+    {"ticker": "PLZL", "name": "Полюс", "lotSize": "1", "targetPercentage": 15},
+
+    {
+      "ticker": "ROSN",
+      "name": "Роснефть",
+      "lotSize": "1",
+      "targetPercentage": 15,
+    },
 
     {
       "ticker": "SBERP",
       "name": "Сбербанк",
       "lotSize": "1",
-      "targetPercentage": 10,
+      "targetPercentage": 15,
     },
 
-    {
-      "ticker": "TATNP",
-      "name": "Татнефть",
-      "lotSize": "1",
-      "targetPercentage": 10,
-    },
-    {
-      "ticker": "PHOR",
-      "name": "Фосагро",
-      "lotSize": "1",
-      "targetPercentage": 10,
-    },
     {
       "ticker": "YDEX",
       "name": "Yandex",
       "lotSize": "1",
-      "targetPercentage": 10,
+      "targetPercentage": 15,
     },
   ];
 

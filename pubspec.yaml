@@ -34,7 +34,7 @@ flutter:
     - assets/icons/YDEX.png
     - assets/icons/OZON.png
     - assets/icons/MDMG.png
-    - assets/icons/TRNFP.png
+    - assets/icons/ROSN.png
     - assets/icons/LKOH.png
 
 msix_config:

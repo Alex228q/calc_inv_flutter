@@ -29,13 +29,13 @@ flutter:
     - assets/icons/PLZL.png
     - assets/icons/SBERP.png
     - assets/icons/CHMF.png
-    - assets/icons/TATNP.png
+    - assets/icons/TRNFP.png
     - assets/icons/PHOR.png
     - assets/icons/YDEX.png
     - assets/icons/OZON.png
     - assets/icons/MDMG.png
     - assets/icons/ROSN.png
-    - assets/icons/LKOH.png
+    - assets/icons/IRAO.png
 
 msix_config:
   display_name: Calc App

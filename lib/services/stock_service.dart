@@ -7,39 +7,41 @@ import '../models/stock.dart';
 class StockService {
   static const List<Map<String, dynamic>> _stocksInfo = [
    
-    {"ticker": "X5", "name": "Икс 5", "lotSize": "1", "targetPercentage": 12.5},
+    {"ticker": "X5", "name": "Икс 5", "lotSize": "1", "targetPercentage": 10},
+    {"ticker": "MDMG", "name": "Мать и дитя", "lotSize": "1", "targetPercentage": 10},
    
     {
       "ticker": "MOEX",
       "name": "Мосбиржа",
       "lotSize": "10",
-      "targetPercentage": 12.5,
+      "targetPercentage": 10,
     },
 
     {
       "ticker": "NVTK",
       "name": "Новатэк",
       "lotSize": "1",
-      "targetPercentage": 12.5,
+      "targetPercentage": 10,
     },
   
-    {"ticker": "OZON", "name": "OZON", "lotSize": "1", "targetPercentage": 12.5},
-    {"ticker": "PLZL", "name": "Полюс", "lotSize": "1", "targetPercentage": 12.5},
+    {"ticker": "OZON", "name": "OZON", "lotSize": "1", "targetPercentage": 10},
+    {"ticker": "PLZL", "name": "Полюс", "lotSize": "1", "targetPercentage": 10},
 
     {
       "ticker": "ROSN",
       "name": "Роснефть",
       "lotSize": "1",
-      "targetPercentage": 12.5,
+      "targetPercentage": 10,
     },
     {
       "ticker": "SBERP",
       "name": "Сбербанк",
       "lotSize": "1",
-      "targetPercentage": 12.5,
+      "targetPercentage": 10,
     },
    
-    {"ticker": "YDEX", "name": "Yandex", "lotSize": "1", "targetPercentage": 12.5},
+    {"ticker": "PHOR", "name": "Фосагро", "lotSize": "1", "targetPercentage": 10},
+    {"ticker": "YDEX", "name": "Yandex", "lotSize": "1", "targetPercentage": 10},
   ];
 
   // Метод для получения целевых процентов

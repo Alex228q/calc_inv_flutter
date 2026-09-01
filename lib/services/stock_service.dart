@@ -7,41 +7,52 @@ import '../models/stock.dart';
 class StockService {
   static const List<Map<String, dynamic>> _stocksInfo = [
    
-    {"ticker": "X5", "name": "Икс 5", "lotSize": "1", "targetPercentage": 10},
-    {"ticker": "MDMG", "name": "Мать и дитя", "lotSize": "1", "targetPercentage": 10},
+    {"ticker": "X5", "name": "Икс 5", "lotSize": "1", "targetPercentage": 8.3},
+    {"ticker": "MDMG", "name": "Мать и дитя", "lotSize": "1", "targetPercentage": 8.3},
    
     {
       "ticker": "MOEX",
       "name": "Мосбиржа",
       "lotSize": "10",
-      "targetPercentage": 10,
+      "targetPercentage": 8.3,
     },
 
     {
       "ticker": "NVTK",
       "name": "Новатэк",
       "lotSize": "1",
-      "targetPercentage": 10,
+      "targetPercentage": 8.3,
     },
-  
-    {"ticker": "OZON", "name": "OZON", "lotSize": "1", "targetPercentage": 10},
-    {"ticker": "PLZL", "name": "Полюс", "lotSize": "1", "targetPercentage": 10},
+   {
+      "ticker": "GMKN",
+      "name": "Норникель",
+      "lotSize": "10",
+      "targetPercentage": 8.3,
+    },
+    {"ticker": "OZON", "name": "OZON", "lotSize": "1", "targetPercentage": 8.3},
+    {"ticker": "PLZL", "name": "Полюс", "lotSize": "1", "targetPercentage": 8.3},
 
     {
       "ticker": "ROSN",
       "name": "Роснефть",
       "lotSize": "1",
-      "targetPercentage": 10,
+      "targetPercentage": 8.3,
     },
     {
       "ticker": "SBERP",
       "name": "Сбербанк",
       "lotSize": "1",
-      "targetPercentage": 10,
+      "targetPercentage": 8.7,
+    },
+     {
+      "ticker": "CHMF",
+      "name": "Северсталь",
+      "lotSize": "1",
+      "targetPercentage": 8.3,
     },
    
-    {"ticker": "PHOR", "name": "Фосагро", "lotSize": "1", "targetPercentage": 10},
-    {"ticker": "YDEX", "name": "Yandex", "lotSize": "1", "targetPercentage": 10},
+    {"ticker": "PHOR", "name": "Фосагро", "lotSize": "1", "targetPercentage": 8.3},
+    {"ticker": "YDEX", "name": "Yandex", "lotSize": "1", "targetPercentage": 8.3},
   ];
 
   // Метод для получения целевых процентов

@@ -135,7 +135,7 @@ class _ExistingSharesInputState extends State<ExistingSharesInput> {
                 ),
               )
             else
-              Container(
+              SizedBox(
                 width: 1150,
                 child: Wrap(
                   spacing: 16.0,

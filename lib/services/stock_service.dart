@@ -22,38 +22,38 @@ class StockService {
       "ticker": "NVTK",
       "name": "Новатэк",
       "lotSize": "1",
-      "targetPercentage": 9,
+      "targetPercentage": 10,
     },
    {
       "ticker": "GMKN",
       "name": "Норникель",
       "lotSize": "10",
-      "targetPercentage": 8,
+      "targetPercentage": 7,
     },
     {"ticker": "OZON", "name": "OZON", "lotSize": "1", "targetPercentage": 8},
-    {"ticker": "PLZL", "name": "Полюс", "lotSize": "1", "targetPercentage": 8},
+    {"ticker": "PLZL", "name": "Полюс", "lotSize": "1", "targetPercentage": 7},
 
     {
       "ticker": "ROSN",
       "name": "Роснефть",
       "lotSize": "1",
-      "targetPercentage": 9,
+      "targetPercentage": 10,
     },
     {
       "ticker": "SBERP",
       "name": "Сбербанк",
       "lotSize": "1",
-      "targetPercentage": 9,
+      "targetPercentage": 10,
     },
      {
       "ticker": "CHMF",
       "name": "Северсталь",
       "lotSize": "1",
-      "targetPercentage": 8,
+      "targetPercentage": 7,
     },
     
-    {"ticker": "PHOR", "name": "Фосагро", "lotSize": "1", "targetPercentage": 8},
-    {"ticker": "YDEX", "name": "Yandex", "lotSize": "1", "targetPercentage": 9},
+    {"ticker": "PHOR", "name": "Фосагро", "lotSize": "1", "targetPercentage": 7},
+    {"ticker": "YDEX", "name": "Yandex", "lotSize": "1", "targetPercentage": 10},
   ];
 
   // Метод для получения целевых процентов

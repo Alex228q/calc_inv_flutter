@@ -8,14 +8,14 @@ class StockService {
   static const List<Map<String, dynamic>> _stocksInfo = [
    
     
-    {"ticker": "X5", "name": "Икс 5", "lotSize": "1", "targetPercentage": 8},
-    {"ticker": "MDMG", "name": "Мать и дитя", "lotSize": "1", "targetPercentage": 8},
+    {"ticker": "X5", "name": "Икс 5", "lotSize": "1", "targetPercentage": 10},
+    {"ticker": "MDMG", "name": "Мать и дитя", "lotSize": "1", "targetPercentage": 10},
    
     {
       "ticker": "MOEX",
       "name": "Мосбиржа",
       "lotSize": "10",
-      "targetPercentage": 8,
+      "targetPercentage": 10,
     },
 
     {
@@ -24,14 +24,9 @@ class StockService {
       "lotSize": "1",
       "targetPercentage": 10,
     },
-   {
-      "ticker": "GMKN",
-      "name": "Норникель",
-      "lotSize": "10",
-      "targetPercentage": 7,
-    },
-    {"ticker": "OZON", "name": "OZON", "lotSize": "1", "targetPercentage": 8},
-    {"ticker": "PLZL", "name": "Полюс", "lotSize": "1", "targetPercentage": 7},
+  
+    {"ticker": "OZON", "name": "OZON", "lotSize": "1", "targetPercentage": 10},
+    {"ticker": "PLZL", "name": "Полюс", "lotSize": "1", "targetPercentage": 10},
 
     {
       "ticker": "ROSN",
@@ -45,14 +40,9 @@ class StockService {
       "lotSize": "1",
       "targetPercentage": 10,
     },
-     {
-      "ticker": "CHMF",
-      "name": "Северсталь",
-      "lotSize": "1",
-      "targetPercentage": 7,
-    },
+ 
     
-    {"ticker": "PHOR", "name": "Фосагро", "lotSize": "1", "targetPercentage": 7},
+    {"ticker": "PHOR", "name": "Фосагро", "lotSize": "1", "targetPercentage": 10},
     {"ticker": "YDEX", "name": "Yandex", "lotSize": "1", "targetPercentage": 10},
   ];
 

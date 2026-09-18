@@ -136,7 +136,7 @@ class _ExistingSharesInputState extends State<ExistingSharesInput> {
               )
             else
               SizedBox(
-                width: 1315,
+                width: 985,
                 child: Wrap(
                   spacing: 16.0,
                   runSpacing: 16.0,
@@ -340,7 +340,7 @@ class _ExistingSharesInputState extends State<ExistingSharesInput> {
                                         ),
                                       ),
                                       Text(
-                                        '${targetPercentage.toStringAsFixed(2)}%',
+                                        '${targetPercentage.toStringAsFixed(1)}%',
                                         style: TextStyle(
                                           fontSize: 12,
                                           fontWeight: FontWeight.w600,

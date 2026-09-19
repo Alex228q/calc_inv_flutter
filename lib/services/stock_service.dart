@@ -9,8 +9,8 @@ class StockService {
    
     
     {"ticker": "X5", "name": "Икс 5", "lotSize": "1", "targetPercentage": 8},
-    {"ticker": "MDMG", "name": "Мать и дитя", "lotSize": "1", "targetPercentage": 8},
-    {"ticker": "MOEX", "name": "Мосбиржа", "lotSize": "10", "targetPercentage": 8},
+    {"ticker": "MDMG", "name": "Мать и дитя", "lotSize": "1", "targetPercentage": 7},
+    {"ticker": "MOEX", "name": "Мосбиржа", "lotSize": "10", "targetPercentage": 7},
    
   
 
@@ -18,7 +18,7 @@ class StockService {
       "ticker": "NVTK",
       "name": "Новатэк",
       "lotSize": "1",
-      "targetPercentage": 9
+      "targetPercentage": 10
     },
   
    
@@ -26,20 +26,20 @@ class StockService {
     {"ticker": "OZON", "name": "OZON", "lotSize": "1", "targetPercentage": 8},
     {"ticker": "PLZL", "name": "Полюс", "lotSize": "1", "targetPercentage": 8},
 
-    {"ticker": "ROSN", "name": "Роснефть", "lotSize": "1", "targetPercentage": 8},
+    {"ticker": "ROSN", "name": "Роснефть", "lotSize": "1", "targetPercentage": 7},
    
     {
       "ticker": "SBERP",
       "name": "Сбербанк",
       "lotSize": "1",
-      "targetPercentage": 9
+      "targetPercentage": 10
     },
   
-    {"ticker": "T", "name": "Т-Технологии", "lotSize": "1", "targetPercentage": 9},
+    {"ticker": "T", "name": "Т-Технологии", "lotSize": "1", "targetPercentage": 10},
     {"ticker": "TATNP", "name": "Татнефть", "lotSize": "1", "targetPercentage": 8},
     
-    {"ticker": "PHOR", "name": "Фосагро", "lotSize": "1", "targetPercentage": 8},
-    {"ticker": "YDEX", "name": "Yandex", "lotSize": "1", "targetPercentage": 9},
+    {"ticker": "PHOR", "name": "Фосагро", "lotSize": "1", "targetPercentage": 7},
+    {"ticker": "YDEX", "name": "Yandex", "lotSize": "1", "targetPercentage": 10},
 
     
   ];

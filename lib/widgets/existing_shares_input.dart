@@ -138,6 +138,7 @@ class _ExistingSharesInputState extends State<ExistingSharesInput> {
               SizedBox(
                 width: 985,
                 child: Wrap(
+                  alignment: WrapAlignment.center,
                   spacing: 16.0,
                   runSpacing: 16.0,
                   children: List.generate(widget.stocks.length, (index) {

@@ -51,7 +51,7 @@ class _ExistingSharesInputState extends State<ExistingSharesInput> {
   Widget build(BuildContext context) {
     final currentPortfolioValue = _calculateCurrentPortfolioValue();
     final hasExistingShares = currentPortfolioValue > 0;
-
+    double screenWidth = MediaQuery.of(context).size.width;
     // Безопасная проверка targetPercentages
     final bool hasValidTargets =
         widget.targetPercentages.length == widget.stocks.length;
@@ -136,7 +136,7 @@ class _ExistingSharesInputState extends State<ExistingSharesInput> {
               )
             else
               SizedBox(
-                width: 985,
+                width: screenWidth * 0.8,
                 child: Wrap(
                   alignment: WrapAlignment.center,
                   spacing: 16.0,
@@ -341,7 +341,7 @@ class _ExistingSharesInputState extends State<ExistingSharesInput> {
                                         ),
                                       ),
                                       Text(
-                                        '${targetPercentage.toStringAsFixed(1)}%',
+                                        '${targetPercentage.toStringAsFixed(2)}%',
                                         style: TextStyle(
                                           fontSize: 12,
                                           fontWeight: FontWeight.w600,

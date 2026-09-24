@@ -38,6 +38,10 @@ flutter:
     - assets/icons/T.png
     - assets/icons/TRNFP.png
     - assets/icons/LSNGP.png
+    - assets/icons/FLOT.png
+    - assets/icons/LKOH.png
+    - assets/icons/HEAD.png
+    - assets/icons/IRAO.png
 
 msix_config:
   display_name: Calc App

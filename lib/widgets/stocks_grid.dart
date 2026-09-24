@@ -265,6 +265,10 @@ class AdaptiveStocksGrid extends StatelessWidget {
       'LSNGP.png',
       'T.png',
       'TRNFP.png',
+      'IRAO.png',
+      'HEAD.png',
+      'FLOT.png',
+      'LKOH.png',
     ];
 
     final logoFileName = '$ticker.png';

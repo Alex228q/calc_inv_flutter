@@ -341,7 +341,7 @@ class _ExistingSharesInputState extends State<ExistingSharesInput> {
                                         ),
                                       ),
                                       Text(
-                                        '${targetPercentage.toStringAsFixed(2)}%',
+                                        '${targetPercentage.toStringAsFixed(1)}%',
                                         style: TextStyle(
                                           fontSize: 12,
                                           fontWeight: FontWeight.w600,

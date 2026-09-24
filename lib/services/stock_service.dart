@@ -8,9 +8,9 @@ class StockService {
   static const List<Map<String, dynamic>> _stocksInfo = [
    
     
-    {"ticker": "X5", "name": "Икс 5", "lotSize": "1", "targetPercentage": 6.25},
-    {"ticker": "MDMG", "name": "Мать и дитя", "lotSize": "1", "targetPercentage": 6.25},
-    {"ticker": "MOEX", "name": "Мосбиржа", "lotSize": "10", "targetPercentage": 6.25},
+    {"ticker": "X5", "name": "Икс 5", "lotSize": "1", "targetPercentage": 8.33},
+    {"ticker": "MDMG", "name": "Мать и дитя", "lotSize": "1", "targetPercentage": 8.33},
+    {"ticker": "MOEX", "name": "Мосбиржа", "lotSize": "10", "targetPercentage": 8.33},
    
   
 
@@ -18,41 +18,30 @@ class StockService {
       "ticker": "NVTK",
       "name": "Новатэк",
       "lotSize": "1",
-      "targetPercentage": 6.25
+      "targetPercentage": 8.33
     },
   
-    {
-      "ticker": "GMKN",
-      "name": "Норникель",
-      "lotSize": "10",
-      "targetPercentage": 6.25
-    },
-  
-    {"ticker": "OZON", "name": "OZON", "lotSize": "1", "targetPercentage": 6.25},
-    {"ticker": "PLZL", "name": "Полюс", "lotSize": "1", "targetPercentage": 6.25},
 
-    {"ticker": "ROSN", "name": "Роснефть", "lotSize": "1", "targetPercentage": 6.25},
-    {"ticker": "LSNGP", "name": "Ленэнерго", "lotSize": "10", "targetPercentage": 6.25},
+  
+    {"ticker": "OZON", "name": "OZON", "lotSize": "1", "targetPercentage": 8.33},
+    {"ticker": "PLZL", "name": "Полюс", "lotSize": "1", "targetPercentage": 8.33},
+
+    {"ticker": "ROSN", "name": "Роснефть", "lotSize": "1", "targetPercentage": 8.33},
+   
    
     {
       "ticker": "SBERP",
       "name": "Сбербанк",
       "lotSize": "1",
-      "targetPercentage": 6.25
+      "targetPercentage": 8.37
     },
-    {
-      "ticker": "CHMF",
-      "name": "Северсталь",
-      "lotSize": "1",
-      "targetPercentage": 6.25
-    },
+   
   
-    {"ticker": "T", "name": "Т-Технологии", "lotSize": "1", "targetPercentage": 6.25},
-    {"ticker": "TATNP", "name": "Татнефть", "lotSize": "1", "targetPercentage": 6.25},
-    {"ticker": "TRNFP", "name": "Транснефть", "lotSize": "1", "targetPercentage": 6.25},
+    {"ticker": "T", "name": "Т-Технологии", "lotSize": "1", "targetPercentage": 8.33},
+    {"ticker": "TATNP", "name": "Татнефть", "lotSize": "1", "targetPercentage": 8.33},
     
-    {"ticker": "PHOR", "name": "Фосагро", "lotSize": "1", "targetPercentage": 6.25},
-    {"ticker": "YDEX", "name": "Yandex", "lotSize": "1", "targetPercentage": 6.25},
+    {"ticker": "PHOR", "name": "Фосагро", "lotSize": "1", "targetPercentage": 8.33},
+    {"ticker": "YDEX", "name": "Yandex", "lotSize": "1", "targetPercentage": 8.33},
 
     
   ];

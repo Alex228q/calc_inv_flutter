@@ -41,9 +41,9 @@ class StockService {
   
     {"ticker": "CHMF", "name": "Северсталь", "lotSize": "1", "targetPercentage": 5},
     {"ticker": "FLOT", "name": "Совкомфлот", "lotSize": "10", "targetPercentage": 5},
-    {"ticker": "T", "name": "Т-Технологии", "lotSize": "1", "targetPercentage": 5},
     {"ticker": "TATNP", "name": "Татнефть", "lotSize": "1", "targetPercentage": 5},
     {"ticker": "TRNFP", "name": "Транснефть", "lotSize": "1", "targetPercentage": 5},
+    {"ticker": "T", "name": "Т-Технологии", "lotSize": "1", "targetPercentage": 5},
     
     {"ticker": "PHOR", "name": "Фосагро", "lotSize": "1", "targetPercentage": 5},
     {"ticker": "HEAD", "name": "HeadHunter", "lotSize": "1", "targetPercentage": 5},

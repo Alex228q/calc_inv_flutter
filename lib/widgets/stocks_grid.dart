@@ -264,7 +264,7 @@ class AdaptiveStocksGrid extends StatelessWidget {
       'ROSN.png',
       'LSNGP.png',
       'T.png',
-      'TRNFP.png',
+      'NMTP.png',
       'IRAO.png',
       'HEAD.png',
       'FLOT.png',

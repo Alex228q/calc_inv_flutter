@@ -24,8 +24,8 @@ class StockService {
   
   
  {
-      "ticker": "GMKN",
-      "name": "Норникель",
+      "ticker": "OZON",
+      "name": "OZON",
       "lotSize": "1",
       "targetPercentage": 7
     },

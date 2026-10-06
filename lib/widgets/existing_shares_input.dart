@@ -136,7 +136,7 @@ class _ExistingSharesInputState extends State<ExistingSharesInput> {
               )
             else
               SizedBox(
-                width: screenWidth * 0.8,
+                width: 1050,
                 child: Wrap(
                   alignment: WrapAlignment.center,
                   spacing: 16.0,

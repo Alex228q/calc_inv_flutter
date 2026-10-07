@@ -35,7 +35,7 @@ class PortfolioSummary extends StatelessWidget {
               children: [
                 const Text('Текущая стоимость:'),
                 Text(
-                  '${currentValue.toStringAsFixed(2)} ₽',
+                  '${currentValue.toStringAsFixed(1)} ₽',
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
               ],
@@ -46,7 +46,7 @@ class PortfolioSummary extends StatelessWidget {
               children: [
                 const Text('Сумма для инвестирования:'),
                 Text(
-                  '${investmentAmount.toStringAsFixed(2)} ₽',
+                  '${investmentAmount.toStringAsFixed(1)} ₽',
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
               ],
@@ -57,7 +57,7 @@ class PortfolioSummary extends StatelessWidget {
               children: [
                 const Text('Будет потрачено:'),
                 Text(
-                  '${totalCost.toStringAsFixed(2)} ₽',
+                  '${totalCost.toStringAsFixed(1)} ₽',
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     color: Colors.green,
@@ -71,7 +71,7 @@ class PortfolioSummary extends StatelessWidget {
               children: [
                 const Text('Остаток:'),
                 Text(
-                  '${remaining.toStringAsFixed(2)} ₽',
+                  '${remaining.toStringAsFixed(1)} ₽',
                   style: TextStyle(
                     color: remaining > 0 ? Colors.orange : Colors.green,
                     fontWeight: FontWeight.w500,

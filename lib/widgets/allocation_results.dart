@@ -175,7 +175,7 @@ class AllocationResults extends StatelessWidget {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        'Стоимость: ${allocation.totalCost.toStringAsFixed(2)} ₽',
+                                        'Стоимость: ${allocation.totalCost.toStringAsFixed(1)} ₽',
                                         style: const TextStyle(
                                           fontSize: 16,
                                           color: Colors.blue,
@@ -271,7 +271,7 @@ class AllocationResults extends StatelessWidget {
                                             CrossAxisAlignment.end,
                                         children: [
                                           Text(
-                                            'Стоимость: ${allocation.totalCost.toStringAsFixed(2)} ₽',
+                                            'Стоимость: ${allocation.totalCost.toStringAsFixed(1)} ₽',
                                             style: const TextStyle(
                                               fontSize: 16,
                                               color: Colors.blue,
@@ -337,7 +337,7 @@ class AllocationResults extends StatelessWidget {
               children: [
                 const Text('Текущий портфель:'),
                 Text(
-                  '${totalExistingCost.toStringAsFixed(2)} ₽',
+                  '${totalExistingCost.toStringAsFixed(1)} ₽',
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
               ],
@@ -365,7 +365,7 @@ class AllocationResults extends StatelessWidget {
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 Text(
-                  '${totalCost.toStringAsFixed(2)} ₽',
+                  '${totalCost.toStringAsFixed(1)} ₽',
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     color: Colors.green,
@@ -379,7 +379,7 @@ class AllocationResults extends StatelessWidget {
               children: [
                 const Text('Остаток:'),
                 Text(
-                  '${remaining.toStringAsFixed(2)} ₽',
+                  '${remaining.toStringAsFixed(1)} ₽',
                   style: TextStyle(
                     color: remaining > 0 ? Colors.orange : Colors.green,
                     fontWeight: FontWeight.w500,

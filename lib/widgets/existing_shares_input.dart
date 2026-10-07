@@ -116,7 +116,7 @@ class _ExistingSharesInputState extends State<ExistingSharesInput> {
             if (hasExistingShares) ...[
               const SizedBox(height: 8),
               Text(
-                'Текущая стоимость портфеля: ${currentPortfolioValue.toStringAsFixed(2)} ₽',
+                'Текущая стоимость портфеля: ${currentPortfolioValue.toStringAsFixed(1)} ₽',
                 style: const TextStyle(
                   fontSize: 14,
                   color: Colors.green,
@@ -136,7 +136,7 @@ class _ExistingSharesInputState extends State<ExistingSharesInput> {
               )
             else
               SizedBox(
-                width: 1050,
+                width: screenWidth * 0.9,
                 child: Wrap(
                   alignment: WrapAlignment.center,
                   spacing: 16.0,
@@ -144,13 +144,14 @@ class _ExistingSharesInputState extends State<ExistingSharesInput> {
                   children: List.generate(widget.stocks.length, (index) {
                     // Безопасное получение targetPercentage
                     final double targetPercentage =
-                        hasValidTargets && index < widget.targetPercentages.length
+                        hasValidTargets &&
+                            index < widget.targetPercentages.length
                         ? widget.targetPercentages[index]
                         : 100.0 /
                               widget
                                   .stocks
                                   .length; // fallback к равномерному распределению
-                
+
                     final stock = widget.stocks[index];
                     final existingShares =
                         int.tryParse(widget.controllers[index].text) ?? 0;
@@ -158,12 +159,12 @@ class _ExistingSharesInputState extends State<ExistingSharesInput> {
                     final double currentPercentage = currentPortfolioValue > 0
                         ? (cost / currentPortfolioValue * 100)
                         : 0;
-                
+
                     final bool needsRebalance = _needsRebalancing(
                       currentPercentage,
                       targetPercentage,
                     );
-                
+
                     return SizedBox(
                       width: 150,
                       child: Column(
@@ -188,11 +189,11 @@ class _ExistingSharesInputState extends State<ExistingSharesInput> {
                                   }
                                 },
                               ),
-                
+
                               // Сигнал о необходимости ребалансировки
                             ],
                           ),
-                
+
                           if (existingShares > 0) ...[
                             const SizedBox(height: 8),
                             Container(
@@ -216,7 +217,7 @@ class _ExistingSharesInputState extends State<ExistingSharesInput> {
                                         MainAxisAlignment.spaceBetween,
                                     children: [
                                       Text(
-                                        '${cost.toStringAsFixed(2)} ₽',
+                                        '${cost.toStringAsFixed(1)} ₽',
                                         style: const TextStyle(
                                           fontSize: 14,
                                           color: Colors.green,
@@ -248,7 +249,8 @@ class _ExistingSharesInputState extends State<ExistingSharesInput> {
                                   ),
                                   const SizedBox(height: 6),
                                   Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Row(
                                         mainAxisAlignment:
@@ -266,10 +268,11 @@ class _ExistingSharesInputState extends State<ExistingSharesInput> {
                                             style: TextStyle(
                                               fontSize: 12,
                                               fontWeight: FontWeight.w600,
-                                              color: _getExistingPercentageColor(
-                                                currentPercentage,
-                                                widget.stocks.length,
-                                              ),
+                                              color:
+                                                  _getExistingPercentageColor(
+                                                    currentPercentage,
+                                                    widget.stocks.length,
+                                                  ),
                                             ),
                                           ),
                                         ],
@@ -278,7 +281,8 @@ class _ExistingSharesInputState extends State<ExistingSharesInput> {
                                   ),
                                   const SizedBox(height: 4),
                                   Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Row(
                                         mainAxisAlignment:

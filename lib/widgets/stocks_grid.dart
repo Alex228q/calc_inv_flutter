@@ -208,7 +208,7 @@ class AdaptiveStocksGrid extends StatelessWidget {
                   SizedBox(
                     width: 70,
                     child: Text(
-                      '${stock.lastPrice.toStringAsFixed(2)} ₽',
+                      '${stock.lastPrice.toStringAsFixed(1)} ₽',
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,

@@ -74,14 +74,14 @@ class StockService {
       "targetPercentage": 5,
     },
     {
-      "ticker": "TATNP",
-      "name": "Татнефть",
+      "ticker": "T",
+      "name": "Т-Технологии",
       "lotSize": "1",
       "targetPercentage": 5,
     },
     {
-      "ticker": "T",
-      "name": "Т-Технологии",
+      "ticker": "TATNP",
+      "name": "Татнефть",
       "lotSize": "1",
       "targetPercentage": 5,
     },

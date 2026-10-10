@@ -25,25 +25,18 @@ flutter:
     - assets/icons/X5.png
     - assets/icons/MOEX.png
     - assets/icons/NVTK.png
-    - assets/icons/GMKN.png
+
     - assets/icons/PLZL.png
     - assets/icons/SBERP.png
-    - assets/icons/CHMF.png
+  
     - assets/icons/TATNP.png
     - assets/icons/PHOR.png
     - assets/icons/YDEX.png
-    - assets/icons/OZON.png
-    - assets/icons/MDMG.png
-    - assets/icons/ROSN.png
+  
     - assets/icons/T.png
-    - assets/icons/NMTP.png
-    - assets/icons/LSNGP.png
-    - assets/icons/FLOT.png
+   
     - assets/icons/LKOH.png
-    - assets/icons/HEAD.png
-    - assets/icons/IRAO.png
-    - assets/icons/BSPB.png
-    - assets/icons/SNGSP.png
+   
 
 msix_config:
   display_name: Calc App

@@ -6,28 +6,29 @@ import '../models/stock.dart';
 
 class StockService {
   static const List<Map<String, dynamic>> _stocksInfo = [
-
-   
     {"ticker": "X5", "name": "Икс 5", "lotSize": "1", "targetPercentage": 10},
-    {"ticker": "LKOH", "name": "Лукойл", "lotSize": "1", "targetPercentage": 13},
-    
+    {
+      "ticker": "LKOH",
+      "name": "Лукойл",
+      "lotSize": "1",
+      "targetPercentage": 13,
+    },
+
     {
       "ticker": "MOEX",
       "name": "Мосбиржа",
       "lotSize": "10",
       "targetPercentage": 9,
     },
-   
+
     {
       "ticker": "NVTK",
       "name": "Новатэк",
       "lotSize": "1",
       "targetPercentage": 8,
     },
-   
 
     {"ticker": "PLZL", "name": "Полюс", "lotSize": "1", "targetPercentage": 9},
-   
 
     {
       "ticker": "SBERP",
@@ -35,7 +36,6 @@ class StockService {
       "lotSize": "1",
       "targetPercentage": 13,
     },
-  
     {
       "ticker": "T",
       "name": "Т-Технологии",
@@ -55,8 +55,13 @@ class StockService {
       "lotSize": "1",
       "targetPercentage": 8,
     },
-   
-    {"ticker": "YDEX", "name": "Yandex", "lotSize": "1", "targetPercentage": 13},
+
+    {
+      "ticker": "YDEX",
+      "name": "Yandex",
+      "lotSize": "1",
+      "targetPercentage": 13,
+    },
   ];
 
   // Метод для получения целевых процентов

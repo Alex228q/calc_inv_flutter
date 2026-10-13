@@ -36,6 +36,17 @@ flutter:
     - assets/icons/T.png
    
     - assets/icons/LKOH.png
+
+    - assets/icons/BSPB.png
+    - assets/icons/CHMF.png
+    - assets/icons/GMKN.png
+    - assets/icons/IRAO.png
+    - assets/icons/LSNGP.png
+    - assets/icons/HEAD.png
+    - assets/icons/ROSN.png
+    - assets/icons/OZON.png
+    - assets/icons/MDMG.png
+    - assets/icons/NMTP.png
    
 
 msix_config:

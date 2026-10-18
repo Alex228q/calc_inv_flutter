@@ -51,7 +51,7 @@ class _ExistingSharesInputState extends State<ExistingSharesInput> {
   Widget build(BuildContext context) {
     final currentPortfolioValue = _calculateCurrentPortfolioValue();
     final hasExistingShares = currentPortfolioValue > 0;
-    double screenWidth = MediaQuery.of(context).size.width;
+
     // Безопасная проверка targetPercentages
     final bool hasValidTargets =
         widget.targetPercentages.length == widget.stocks.length;
@@ -136,7 +136,7 @@ class _ExistingSharesInputState extends State<ExistingSharesInput> {
               )
             else
               SizedBox(
-                width: screenWidth * 0.7,
+                width: 1100,
                 child: Wrap(
                   alignment: WrapAlignment.center,
                   spacing: 16.0,
@@ -264,7 +264,7 @@ class _ExistingSharesInputState extends State<ExistingSharesInput> {
                                             ),
                                           ),
                                           Text(
-                                            '${currentPercentage.toStringAsFixed(2)}%',
+                                            '${currentPercentage.toStringAsFixed(1)}%',
                                             style: TextStyle(
                                               fontSize: 12,
                                               fontWeight: FontWeight.w600,
@@ -296,7 +296,7 @@ class _ExistingSharesInputState extends State<ExistingSharesInput> {
                                             ),
                                           ),
                                           Text(
-                                            '${targetPercentage.toStringAsFixed(2)}%',
+                                            '${targetPercentage.toStringAsFixed(1)}%',
                                             style: TextStyle(
                                               fontSize: 12,
                                               fontWeight: FontWeight.w600,
@@ -345,7 +345,7 @@ class _ExistingSharesInputState extends State<ExistingSharesInput> {
                                         ),
                                       ),
                                       Text(
-                                        '${targetPercentage.toStringAsFixed(2)}%',
+                                        '${targetPercentage.toStringAsFixed(1)}%',
                                         style: TextStyle(
                                           fontSize: 12,
                                           fontWeight: FontWeight.w600,

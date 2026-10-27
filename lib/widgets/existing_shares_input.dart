@@ -49,6 +49,8 @@ class _ExistingSharesInputState extends State<ExistingSharesInput> {
 
   @override
   Widget build(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
+
     final currentPortfolioValue = _calculateCurrentPortfolioValue();
     final hasExistingShares = currentPortfolioValue > 0;
 
@@ -136,7 +138,7 @@ class _ExistingSharesInputState extends State<ExistingSharesInput> {
               )
             else
               SizedBox(
-                width: 1400,
+                width: screenWidth * 0.7,
                 child: Wrap(
                   alignment: WrapAlignment.center,
                   spacing: 16.0,

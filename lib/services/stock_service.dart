@@ -10,24 +10,36 @@ class StockService {
       "ticker": "BSPB",
       "name": "Банк Санкт-Петербург",
       "lotSize": "10",
-      "targetPercentage": 7,
+      "targetPercentage": 5,
     },
-   
-    {"ticker": "X5", "name": "Икс 5", "lotSize": "1", "targetPercentage": 7},
-    {"ticker": "LKOH", "name": "Лукойл", "lotSize": "1", "targetPercentage": 6},
-   
+    {
+      "ticker": "IRAO",
+      "name": "Интер РАО",
+      "lotSize": "100",
+      "targetPercentage": 5,
+    },
+
+    {"ticker": "X5", "name": "Икс 5", "lotSize": "1", "targetPercentage": 5},
+    {"ticker": "LKOH", "name": "Лукойл", "lotSize": "1", "targetPercentage": 5},
+    {
+      "ticker": "MDMG",
+      "name": "Мать и дитя",
+      "lotSize": "1",
+      "targetPercentage": 5,
+    },
+
     {
       "ticker": "MOEX",
       "name": "Московская Биржа",
       "lotSize": "10",
-      "targetPercentage": 7,
+      "targetPercentage": 5,
     },
-  
+
     {
       "ticker": "NVTK",
       "name": "Новатэк",
       "lotSize": "1",
-      "targetPercentage": 6,
+      "targetPercentage": 5,
     },
     {
       "ticker": "GMKN",
@@ -35,21 +47,26 @@ class StockService {
       "lotSize": "10",
       "targetPercentage": 5,
     },
-    {"ticker": "OZON", "name": "OZON", "lotSize": "1", "targetPercentage": 7},
+    {"ticker": "OZON", "name": "OZON", "lotSize": "1", "targetPercentage": 5},
     {"ticker": "PLZL", "name": "Полюс", "lotSize": "1", "targetPercentage": 5},
     {
       "ticker": "ROSN",
       "name": "Роснефть",
       "lotSize": "1",
-      "targetPercentage": 6,
+      "targetPercentage": 5,
+    },
+    {
+      "ticker": "LSNGP",
+      "name": "Ленэнерго",
+      "lotSize": "10",
+      "targetPercentage": 5,
     },
 
-  
     {
       "ticker": "SBERP",
       "name": "Сбербанк",
       "lotSize": "1",
-      "targetPercentage": 7,
+      "targetPercentage": 5,
     },
     {
       "ticker": "CHMF",
@@ -58,16 +75,22 @@ class StockService {
       "targetPercentage": 5,
     },
     {
-      "ticker": "T",
-      "name": "Т-Технологии",
-      "lotSize": "1",
-      "targetPercentage": 7,
-    },
-    {
       "ticker": "TATNP",
       "name": "Татнефть",
       "lotSize": "1",
-      "targetPercentage": 6,
+      "targetPercentage": 5,
+    },
+    {
+      "ticker": "TRNFP",
+      "name": "Транснефть",
+      "lotSize": "1",
+      "targetPercentage": 5,
+    },
+    {
+      "ticker": "T",
+      "name": "Т-Технологии",
+      "lotSize": "1",
+      "targetPercentage": 5,
     },
     {
       "ticker": "PHOR",
@@ -80,10 +103,10 @@ class StockService {
       "ticker": "HEAD",
       "name": "Хэдхантер",
       "lotSize": "1",
-      "targetPercentage": 7,
+      "targetPercentage": 5,
     },
 
-    {"ticker": "YDEX", "name": "Yandex", "lotSize": "1", "targetPercentage": 7},
+    {"ticker": "YDEX", "name": "Yandex", "lotSize": "1", "targetPercentage": 5},
   ];
 
   // Метод для получения целевых процентов

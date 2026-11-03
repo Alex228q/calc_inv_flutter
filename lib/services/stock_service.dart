@@ -6,40 +6,21 @@ import '../models/stock.dart';
 
 class StockService {
   static const List<Map<String, dynamic>> _stocksInfo = [
-    {
-      "ticker": "BSPB",
-      "name": "Банк Санкт-Петербург",
-      "lotSize": "10",
-      "targetPercentage": 5,
-    },
-    {
-      "ticker": "IRAO",
-      "name": "Интер РАО",
-      "lotSize": "100",
-      "targetPercentage": 5,
-    },
-
-    {"ticker": "X5", "name": "Икс 5", "lotSize": "1", "targetPercentage": 5},
-    {"ticker": "LKOH", "name": "Лукойл", "lotSize": "1", "targetPercentage": 5},
-    {
-      "ticker": "MDMG",
-      "name": "Мать и дитя",
-      "lotSize": "1",
-      "targetPercentage": 5,
-    },
+    {"ticker": "X5", "name": "Икс 5", "lotSize": "1", "targetPercentage": 9},
+    {"ticker": "LKOH", "name": "Лукойл", "lotSize": "1", "targetPercentage": 7},
 
     {
       "ticker": "MOEX",
       "name": "Московская Биржа",
       "lotSize": "10",
-      "targetPercentage": 5,
+      "targetPercentage": 8,
     },
 
     {
       "ticker": "NVTK",
       "name": "Новатэк",
       "lotSize": "1",
-      "targetPercentage": 5,
+      "targetPercentage": 6,
     },
     {
       "ticker": "GMKN",
@@ -48,25 +29,13 @@ class StockService {
       "targetPercentage": 5,
     },
     {"ticker": "OZON", "name": "OZON", "lotSize": "1", "targetPercentage": 5},
-    {"ticker": "PLZL", "name": "Полюс", "lotSize": "1", "targetPercentage": 5},
-    {
-      "ticker": "ROSN",
-      "name": "Роснефть",
-      "lotSize": "1",
-      "targetPercentage": 5,
-    },
-    {
-      "ticker": "LSNGP",
-      "name": "Ленэнерго",
-      "lotSize": "10",
-      "targetPercentage": 5,
-    },
+    {"ticker": "PLZL", "name": "Полюс", "lotSize": "1", "targetPercentage": 7},
 
     {
       "ticker": "SBERP",
       "name": "Сбербанк",
       "lotSize": "1",
-      "targetPercentage": 5,
+      "targetPercentage": 10,
     },
     {
       "ticker": "CHMF",
@@ -78,20 +47,15 @@ class StockService {
       "ticker": "T",
       "name": "Т-Технологии",
       "lotSize": "1",
-      "targetPercentage": 5,
+      "targetPercentage": 8,
     },
     {
       "ticker": "TATNP",
       "name": "Татнефть",
       "lotSize": "1",
-      "targetPercentage": 5,
+      "targetPercentage": 8,
     },
-    {
-      "ticker": "TRNFP",
-      "name": "Транснефть",
-      "lotSize": "1",
-      "targetPercentage": 5,
-    },
+
     {
       "ticker": "PHOR",
       "name": "ФосАгро",
@@ -103,10 +67,15 @@ class StockService {
       "ticker": "HEAD",
       "name": "Хэдхантер",
       "lotSize": "1",
-      "targetPercentage": 5,
+      "targetPercentage": 7,
     },
 
-    {"ticker": "YDEX", "name": "Yandex", "lotSize": "1", "targetPercentage": 5},
+    {
+      "ticker": "YDEX",
+      "name": "Yandex",
+      "lotSize": "1",
+      "targetPercentage": 10,
+    },
   ];
 
   // Метод для получения целевых процентов

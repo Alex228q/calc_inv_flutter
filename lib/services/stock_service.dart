@@ -11,7 +11,7 @@ class StockService {
       "ticker": "LKOH",
       "name": "Лукойл",
       "lotSize": "1",
-      "targetPercentage": 15,
+      "targetPercentage": 8,
     },
 
     {
@@ -21,7 +21,19 @@ class StockService {
       "targetPercentage": 10,
     },
 
-    {"ticker": "PLZL", "name": "Полюс", "lotSize": "1", "targetPercentage": 10},
+    {
+      "ticker": "NVTK",
+      "name": "Новатэк",
+      "lotSize": "1",
+      "targetPercentage": 7,
+    },
+    {"ticker": "OZON", "name": "OZON", "lotSize": "1", "targetPercentage": 7},
+    {
+      "ticker": "PLZL",
+      "name": "Полюс",
+      "lotSize": "1",
+      "targetPercentage": 10,
+    },
 
     {
       "ticker": "SBERP",
@@ -29,25 +41,19 @@ class StockService {
       "lotSize": "1",
       "targetPercentage": 15,
     },
-    {
-      "ticker": "CHMF",
-      "name": "Северсталь",
-      "lotSize": "1",
-      "targetPercentage": 7.5,
-    },
 
     {
       "ticker": "TATNP",
       "name": "Татнефть",
       "lotSize": "1",
-      "targetPercentage": 10,
+      "targetPercentage": 8,
     },
 
     {
       "ticker": "PHOR",
       "name": "ФосАгро",
       "lotSize": "1",
-      "targetPercentage": 7.5,
+      "targetPercentage": 10,
     },
 
     {

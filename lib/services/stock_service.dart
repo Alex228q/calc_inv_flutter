@@ -6,75 +6,55 @@ import '../models/stock.dart';
 
 class StockService {
   static const List<Map<String, dynamic>> _stocksInfo = [
-    {"ticker": "X5", "name": "Икс 5", "lotSize": "1", "targetPercentage": 9},
-    {"ticker": "LKOH", "name": "Лукойл", "lotSize": "1", "targetPercentage": 7},
+    {"ticker": "X5", "name": "Икс 5", "lotSize": "1", "targetPercentage": 10},
+    {
+      "ticker": "LKOH",
+      "name": "Лукойл",
+      "lotSize": "1",
+      "targetPercentage": 15,
+    },
 
     {
       "ticker": "MOEX",
       "name": "Московская Биржа",
       "lotSize": "10",
-      "targetPercentage": 8,
+      "targetPercentage": 10,
     },
 
-    {
-      "ticker": "NVTK",
-      "name": "Новатэк",
-      "lotSize": "1",
-      "targetPercentage": 6,
-    },
-    {
-      "ticker": "GMKN",
-      "name": "Норникель",
-      "lotSize": "10",
-      "targetPercentage": 5,
-    },
-    {"ticker": "OZON", "name": "OZON", "lotSize": "1", "targetPercentage": 5},
-    {"ticker": "PLZL", "name": "Полюс", "lotSize": "1", "targetPercentage": 7},
+    {"ticker": "PLZL", "name": "Полюс", "lotSize": "1", "targetPercentage": 10},
 
     {
       "ticker": "SBERP",
       "name": "Сбербанк",
       "lotSize": "1",
-      "targetPercentage": 10,
+      "targetPercentage": 15,
     },
     {
       "ticker": "CHMF",
       "name": "Северсталь",
       "lotSize": "1",
-      "targetPercentage": 5,
+      "targetPercentage": 7.5,
     },
-    {
-      "ticker": "T",
-      "name": "Т-Технологии",
-      "lotSize": "1",
-      "targetPercentage": 8,
-    },
+
     {
       "ticker": "TATNP",
       "name": "Татнефть",
       "lotSize": "1",
-      "targetPercentage": 8,
+      "targetPercentage": 10,
     },
 
     {
       "ticker": "PHOR",
       "name": "ФосАгро",
       "lotSize": "1",
-      "targetPercentage": 5,
-    },
-
-    {
-      "ticker": "HEAD",
-      "name": "Хэдхантер",
-      "lotSize": "1",
-      "targetPercentage": 7,
+      "targetPercentage": 7.5,
     },
 
     {
       "ticker": "YDEX",
       "name": "Yandex",
       "lotSize": "1",
-      "targetPercentage": 10,
+      "targetPercentage": 15,
     },
   ];
 

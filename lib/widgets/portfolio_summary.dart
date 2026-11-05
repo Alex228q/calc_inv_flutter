@@ -8,13 +8,13 @@ class PortfolioSummary extends StatelessWidget {
   final int totalLots;
 
   const PortfolioSummary({
-    Key? key,
+    super.key,
     required this.currentValue,
     required this.investmentAmount,
     required this.totalCost,
     required this.remaining,
     required this.totalLots,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

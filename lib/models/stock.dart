@@ -1,102 +1,30 @@
-import 'package:flutter/material.dart';
-
-String getRating(double? deviation) {
-  if (deviation == null) return 'Нет данных';
-
-  if (deviation < -15) return 'Крайне недооценена';
-  if (deviation < -10) return 'Сильно недооценена';
-  if (deviation < -5) return 'Умеренно недооценена';
-  if (deviation < -2) return 'Слегка недооценена';
-  if (deviation < 2) return 'Около справедливой';
-  if (deviation < 5) return 'Слегка переоценена';
-  if (deviation < 10) return 'Умеренно переоценена';
-  if (deviation < 15) return 'Сильно переоценена';
-  return 'Крайне переоценена';
-}
-
-Color getRatingColor(double? deviation) {
-  if (deviation == null) return Colors.grey;
-
-  if (deviation < -15) return Colors.green.shade900;
-  if (deviation < -10) return Colors.green.shade700;
-  if (deviation < -5) return Colors.green.shade500;
-  if (deviation < -2) return Colors.green.shade300;
-  if (deviation < 2) return Colors.grey;
-  if (deviation < 5) return Colors.orange.shade300;
-  if (deviation < 10) return Colors.orange.shade500;
-  if (deviation < 15) return Colors.red.shade300;
-  return Colors.red.shade700;
-}
-
 class Stock {
-  final String secId;
-  final double lastPrice;
-  final String shortName;
-  final int lotSize;
-  final double? sma200; // Добавляем SMA200
-  final double? deviationFromSma; // Отклонение от SMA в процентах
-
-  Stock({
+  const Stock({
     required this.secId,
-    required this.lastPrice,
     required this.shortName,
+    required this.lastPrice,
     required this.lotSize,
+    required this.targetWeight,
     this.sma200,
     this.deviationFromSma,
   });
 
-  factory Stock.fromJson(Map<String, dynamic> json) {
-    return Stock(
-      secId: json['SECID'] ?? json['secId'],
-      shortName: json['SECNAME'] ?? json['shortName'],
-      lastPrice:
-          double.tryParse(
-            json['PREVPRICE']?.toString() ??
-                json['lastPrice']?.toString() ??
-                '0',
-          ) ??
-          0.0,
-      lotSize: int.tryParse(json['lotSize']?.toString() ?? '1') ?? 1,
-      sma200: json['sma200'] != null
-          ? double.tryParse(json['sma200'].toString())
-          : null,
-      deviationFromSma: json['deviationFromSma'] != null
-          ? double.tryParse(json['deviationFromSma'].toString())
-          : null,
-    );
-  }
+  final String secId;
+  final String shortName;
+  final double lastPrice;
+  final int lotSize;
 
-  Map<String, dynamic> toJson() {
-    return {
-      'secId': secId,
-      'lastPrice': lastPrice,
-      'shortName': shortName,
-      'lotSize': lotSize,
-      'sma200': sma200,
-      'deviationFromSma': deviationFromSma,
-    };
-  }
+  /// Сырой вес из каталога (до нормализации в проценты).
+  final double targetWeight;
 
-  Stock copyWith({
-    String? secId,
-    double? lastPrice,
-    String? shortName,
-    int? lotSize,
-    double? sma200,
-    double? deviationFromSma,
-  }) {
-    return Stock(
-      secId: secId ?? this.secId,
-      lastPrice: lastPrice ?? this.lastPrice,
-      shortName: shortName ?? this.shortName,
-      lotSize: lotSize ?? this.lotSize,
-      sma200: sma200 ?? this.sma200,
-      deviationFromSma: deviationFromSma ?? this.deviationFromSma,
-    );
-  }
+  final double? sma200;
+
+  /// Отклонение цены от SMA200 в процентах.
+  final double? deviationFromSma;
+
+  double get lotCost => lastPrice * lotSize;
 
   @override
-  String toString() {
-    return 'Stock{secId: $secId, lastPrice: $lastPrice, shortName: $shortName, lotSize: $lotSize, sma200: $sma200, deviationFromSma: $deviationFromSma}';
-  }
+  String toString() =>
+      'Stock($secId, price: $lastPrice, lot: $lotSize, sma200: $sma200, dev: $deviationFromSma)';
 }

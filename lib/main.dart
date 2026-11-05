@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'screens/stock_price_screen.dart';
 
-void main() {
-  runApp(const MyApp());
-}
+void main() => runApp(const MyApp());
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -12,7 +10,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Распределение',
-      theme: ThemeData(primarySwatch: Colors.blue, useMaterial3: true),
+      theme: ThemeData(colorSchemeSeed: Colors.blue, useMaterial3: true),
       home: const StockPriceScreen(),
     );
   }

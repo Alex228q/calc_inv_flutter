@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-/// Логотип из assets/icons/<TICKER>.png; если файла нет — цветной квадрат с буквой.
 class StockLogo extends StatelessWidget {
   const StockLogo({super.key, required this.ticker, this.size = 40});
 

@@ -54,8 +54,8 @@ class ExistingSharesInput extends StatelessWidget {
                 const SizedBox(height: 12),
                 Wrap(
                   alignment: WrapAlignment.center,
-                  spacing: 46,
-                  runSpacing: 10,
+                  spacing: 16,
+                  runSpacing: 16,
                   children: [
                     for (var i = 0; i < stocks.length; i++)
                       ShareInputTile(

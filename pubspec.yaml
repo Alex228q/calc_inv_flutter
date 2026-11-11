@@ -46,7 +46,7 @@ flutter:
     - assets/icons/ROSN.png
     - assets/icons/OZON.png
     - assets/icons/MDMG.png
-    - assets/icons/TRNFP.png
+    - assets/icons/FLOT.png
    
 
 msix_config:

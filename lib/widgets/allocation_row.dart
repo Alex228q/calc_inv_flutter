@@ -3,7 +3,8 @@ import '../core/formatters.dart';
 import '../models/stock_allocation.dart';
 
 /// Строка результата по бумаге. Один набор частей, две раскладки.
-class AllocationRow extends StatelessWidget {
+/// Слева чекбокс, чтобы отметить, что действие выполнено.
+class AllocationRow extends StatefulWidget {
   const AllocationRow({super.key, required this.allocation});
 
   static const double _wideBreakpoint = 800;
@@ -11,14 +12,39 @@ class AllocationRow extends StatelessWidget {
   final StockAllocation allocation;
 
   @override
+  State<AllocationRow> createState() => _AllocationRowState();
+}
+
+class _AllocationRowState extends State<AllocationRow> {
+  bool _done = false;
+
+  @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
-      child: LayoutBuilder(
-        builder: (context, constraints) =>
-            constraints.maxWidth < _wideBreakpoint
-            ? _NarrowLayout(allocation: allocation)
-            : _WideLayout(allocation: allocation),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Checkbox(
+                value: _done,
+                onChanged: (value) => setState(() => _done = value ?? false),
+              ),
+              Expanded(
+                child: Opacity(
+                  opacity: _done ? 0.45 : 1,
+                  child: LayoutBuilder(
+                    builder: (context, constraints) =>
+                        constraints.maxWidth < AllocationRow._wideBreakpoint
+                        ? _NarrowLayout(allocation: widget.allocation)
+                        : _WideLayout(allocation: widget.allocation),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const Divider(),
+        ],
       ),
     );
   }
@@ -53,7 +79,6 @@ class _NarrowLayout extends StatelessWidget {
               _AfterLabel(percentage: allocation.newPercentage),
             ],
           ),
-          const Divider(),
         ],
       ),
     );
@@ -67,36 +92,31 @@ class _WideLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Row(
       children: [
-        Row(
-          children: [
-            Expanded(flex: 2, child: _NameBlock(allocation: allocation)),
-            Expanded(
-              flex: 1,
-              child: _BuyLabel(lots: allocation.lots, fontSize: 18),
-            ),
-            Expanded(
-              flex: 2,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
+        Expanded(flex: 2, child: _NameBlock(allocation: allocation)),
+        Expanded(
+          flex: 1,
+          child: _BuyLabel(lots: allocation.lots, fontSize: 18),
+        ),
+        Expanded(
+          flex: 2,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              _CostLabel(cost: allocation.purchaseCost),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  _CostLabel(cost: allocation.purchaseCost),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      _BeforeLabel(percentage: allocation.existingPercentage),
-                      const SizedBox(width: 40),
-                      _AfterLabel(percentage: allocation.newPercentage),
-                    ],
-                  ),
+                  _BeforeLabel(percentage: allocation.existingPercentage),
+                  const SizedBox(width: 40),
+                  _AfterLabel(percentage: allocation.newPercentage),
                 ],
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-        const Divider(),
       ],
     );
   }

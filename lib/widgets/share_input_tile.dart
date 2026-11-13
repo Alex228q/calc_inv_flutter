@@ -18,7 +18,7 @@ class ShareInputTile extends StatelessWidget {
   static const double width = 150;
 
   /// Бумага «перевешивает», если её доля больше целевой в столько раз.
-  static const double rebalanceThreshold = 1.6;
+  static const double rebalanceThreshold = 2.0;
 
   final Stock stock;
   final TextEditingController controller;

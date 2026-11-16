@@ -16,39 +16,26 @@ class StockConfig {
 }
 
 const List<StockConfig> stockCatalog = [
-  StockConfig(
-    ticker: 'IRAO',
-    name: 'Интер РАО',
-    lotSize: 100,
-    targetWeight: 6.5,
-  ),
-  StockConfig(ticker: 'X5', name: 'Икс 5', targetWeight: 7),
-  StockConfig(ticker: 'LKOH', name: 'Лукойл', targetWeight: 8),
-  StockConfig(ticker: 'MDMG', name: 'Мать и дитя', targetWeight: 7),
+  StockConfig(ticker: 'X5', name: 'Икс 5', targetWeight: 12),
+  StockConfig(ticker: 'LKOH', name: 'Лукойл', targetWeight: 11),
+
 
   StockConfig(
     ticker: 'MOEX',
     name: 'Московская Биржа',
     lotSize: 10,
-    targetWeight: 7,
+    targetWeight: 8,
   ),
-  StockConfig(ticker: 'NVTK', name: 'Новатэк', targetWeight: 6.5),
+  StockConfig(ticker: 'NVTK', name: 'Новатэк', targetWeight: 9),
 
   StockConfig(ticker: 'PLZL', name: 'Полюс', targetWeight: 8),
 
-  StockConfig(
-    ticker: 'LSNGP',
-    name: 'Ленэнерго',
-    lotSize: 10,
-    targetWeight: 6.5,
-  ),
+  StockConfig(ticker: 'SBERP', name: 'Сбербанк', targetWeight: 12),
 
-  StockConfig(ticker: 'SBERP', name: 'Сбербанк', targetWeight: 8),
+  StockConfig(ticker: 'T', name: 'Т-Технологии', targetWeight: 11),
+  StockConfig(ticker: 'TATNP', name: 'Татнефть', targetWeight: 8),
+  StockConfig(ticker: 'PHOR', name: 'ФосАгро', targetWeight: 9),
+ 
 
-  StockConfig(ticker: 'T', name: 'Т-Технологии', targetWeight: 7),
-  StockConfig(ticker: 'TATNP', name: 'Татнефть', targetWeight: 7),
-  StockConfig(ticker: 'PHOR', name: 'ФосАгро', targetWeight: 7),
-  StockConfig(ticker: 'HEAD', name: 'Хэдхантер', targetWeight: 6.5),
-
-  StockConfig(ticker: 'YDEX', name: 'Yandex', targetWeight: 8),
+  StockConfig(ticker: 'YDEX', name: 'Yandex', targetWeight: 12),
 ];

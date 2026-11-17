@@ -47,6 +47,8 @@ flutter:
     - assets/icons/OZON.png
     - assets/icons/MDMG.png
     - assets/icons/TRNFP.png
+
+    - assets/certs/actalis.pem
    
 
 msix_config:

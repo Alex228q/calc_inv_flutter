@@ -48,6 +48,13 @@ flutter:
     - assets/icons/MDMG.png
     - assets/icons/TRNFP.png
 
+    - assets/icons/FLOT.png
+    - assets/icons/SNGSP.png
+    - assets/icons/MTSS.png
+    - assets/icons/RAGR.png
+    - assets/icons/DOMRF.png
+
+
     - assets/certs/actalis.pem
    
 

@@ -3,11 +3,12 @@ import '../core/indicators.dart';
 import '../data/stock_catalog.dart';
 import '../models/stock.dart';
 import 'moex_api_client.dart';
+import '../data/http_client_factory.dart';
 
 /// Собирает [Stock] из каталога + данных MOEX (цена и SMA200).
 class StockService {
   StockService({MoexApiClient? api, List<StockConfig> catalog = stockCatalog})
-    : _api = api ?? MoexApiClient(),
+    : _api = api ?? MoexApiClient(client: createMoexHttpClient()),
       _catalog = catalog;
 
   static const _smaPeriod = 200;

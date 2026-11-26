@@ -15,7 +15,7 @@ class ShareInputTile extends StatelessWidget {
     required this.portfolioIsEmpty,
   });
 
-  static const double width = 135;
+  static const double width = 150;
 
   /// Бумага «перевешивает», если её доля больше целевой в столько раз.
   static const double rebalanceThreshold = 2.0;

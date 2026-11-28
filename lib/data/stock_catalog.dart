@@ -17,19 +17,18 @@ class StockConfig {
 
 const List<StockConfig> stockCatalog = [
   StockConfig(ticker: 'X5', name: 'Икс 5', targetWeight: 10),
-  StockConfig(ticker: 'LKOH', name: 'Лукойл', targetWeight: 10),
-  StockConfig(ticker: 'MOEX', name: 'Мосбиржа', lotSize: 10, targetWeight: 10),
+  StockConfig(ticker: 'LKOH', name: 'Лукойл', targetWeight: 12),
+  StockConfig(ticker: 'MDMG', name: 'Мать и дитя', targetWeight: 7),
+  StockConfig(ticker: 'MOEX', name: 'Мосбиржа', lotSize: 10, targetWeight: 8),
 
   StockConfig(ticker: 'NVTK', name: 'Новатэк', targetWeight: 10),
 
-  StockConfig(ticker: 'OZON', name: 'OZON', targetWeight: 10),
+  StockConfig(ticker: 'PLZL', name: 'Полюс', targetWeight: 9),
 
-  StockConfig(ticker: 'PLZL', name: 'Полюс', targetWeight: 10),
+  StockConfig(ticker: 'SBERP', name: 'Сбербанк', targetWeight: 13),
 
-  StockConfig(ticker: 'SBERP', name: 'Сбербанк', targetWeight: 10),
+  StockConfig(ticker: 'T', name: 'Т-Технологии', targetWeight: 11),
+  StockConfig(ticker: 'PHOR', name: 'Фосагро', targetWeight: 9),
 
-  StockConfig(ticker: 'T', name: 'Т-Технологии', targetWeight: 10),
-  StockConfig(ticker: 'PHOR', name: 'Фосагро', targetWeight: 10),
-
-  StockConfig(ticker: 'YDEX', name: 'Yandex', targetWeight: 10),
+  StockConfig(ticker: 'YDEX', name: 'Yandex', targetWeight: 11),
 ];
